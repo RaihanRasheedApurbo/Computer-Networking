@@ -33,7 +33,7 @@ public class ServerThread implements Runnable {
 
 
     public Boolean deliverPacket(Packet p) {
-
+        return true;
         
         /*
         1. Find the router s which has an interface

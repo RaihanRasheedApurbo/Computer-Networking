@@ -69,7 +69,39 @@ public class Router {
      * for itself, distance=0; for any connected router with state=true, distance=1; otherwise distance=Constants.INFTY;
      */
     public void initiateRoutingTable() {
+    //     private int routerId;
+    // private int numberOfInterfaces;
+    // private ArrayList<IPAddress> interfaceAddresses;//list of IP address of all interfaces of the router
+    // private ArrayList<RoutingTableEntry> routingTable;//used to implement DVR
+    // private ArrayList<Integer> neighborRouterIDs;//Contains both "UP" and "DOWN" state routers
+    // private Boolean state;//true represents "UP" state and false is for "DOWN" state
+    // private Map<Integer, IPAddress> gatewayIDtoIP;
+        ArrayList<Router> routers = NetworkLayerServer.routers;
+        int totalRouterCount = routers.size();
+        for(int i=1;i<=totalRouterCount;i++)
+        {   
 
+            if(i==this.routerId)
+            {
+                RoutingTableEntry temp = new RoutingTableEntry(i, 0, 0);
+                this.routingTable.add(temp);
+            }
+            else
+            {
+                RoutingTableEntry temp = new RoutingTableEntry(i, Constants.INFINITY, -5);
+                this.routingTable.add(temp);
+            }
+        }
+        Map<Integer, Router> routerMap = NetworkLayerServer.routerMap;
+        for(int id: this.neighborRouterIDs)
+        {
+            if(routerMap.get(id).state==true)
+            {
+                this.routingTable.get(id-1).setDistance(1);
+                this.routingTable.get(id-1).setGatewayRouterId(id);;
+                
+            }
+        }
         
     }
 
@@ -77,6 +109,7 @@ public class Router {
      * Delete all the routingTableEntry
      */
     public void clearRoutingTable() {
+        routingTable.clear();
 
     }
 
@@ -85,11 +118,59 @@ public class Router {
      * @param neighbor
      */
     public boolean updateRoutingTable(Router neighbor) {
+        boolean isNeighbor = false; // check whether neighbor is truly neighbor
+        boolean change = false; // will return this value
+        for(int i:this.neighborRouterIDs)
+        {
+            if(i==neighbor.routerId)
+            {
+                isNeighbor = true;
+                break;
+            }
+        }
         
+        
+        if(isNeighbor==false)
+        {
+            return change;
+        }
+        
+        if(neighbor.state==false)
+        {
+            this.routingTable.get(neighbor.routerId-1).setDistance(Constants.INFINITY);
+            this.routingTable.get(neighbor.routerId-1).setGatewayRouterId(-5);
+            for(RoutingTableEntry r: this.routingTable)
+            {
+                if(r.getGatewayRouterId()==neighbor.routerId)
+                {
+                    r.setDistance(Constants.INFINITY);
+                    r.setGatewayRouterId(-5);
+                }
+            }
+            change = true;
+        }
+        else
+        {
+            for(int i=0;i<this.routingTable.size();i++)
+            {
+                RoutingTableEntry thisRow = this.routingTable.get(i);
+                double dxy = thisRow.getDistance();
+                double dyz = neighbor.routingTable.get(i).getDistance();
+                double dxz = 1;
+                if(dyz+dxz<dxy)
+                {
+                    thisRow.setDistance(dyz+dxz);
+                    thisRow.setGatewayRouterId(neighbor.routerId);
+                    change = true;
+                }
+            }
+
+        }
+        return change;
     }
 
     public boolean sfupdateRoutingTable(Router neighbor) {
-        
+        return true;
     }
 
     /**

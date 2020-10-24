@@ -37,7 +37,9 @@ public class NetworkLayerServer {
         System.out.println("Creating router topology");
 
         readTopology();
+        //System.out.println("topology reading finished");
         printRouters();
+        //System.out.println("finished printing");
 
         initRoutingTables(); //Initialize routing tables for all routers
 
@@ -63,6 +65,7 @@ public class NetworkLayerServer {
     public static void initRoutingTables() {
         for (Router router : routers) {
             router.initiateRoutingTable();
+            //router.printRoutingTable();
         }
     }
 
