@@ -18,16 +18,20 @@ public class RouterStateChanger implements Runnable {
         while (true) {
             if (islocked) {
                 try {
+                    System.out.println("inside try catch!");
                     synchronized (msg) {
                         msg.wait();
                     }
+                    System.out.println("outside try catch!");
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
             double d = random.nextDouble();
+            //System.out.println(d);
             if (d < Constants.LAMBDA) {
                 revertRandomRouter();
+                //System.out.println("kill meh please "+d);
             }
             try {
                 Thread.sleep(1000);
