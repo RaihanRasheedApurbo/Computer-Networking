@@ -239,6 +239,7 @@ public class Router {
         }
         System.out.println("-----------------------");
     }
+    
     public String strRoutingTable() {
         String string = "Router" + routerId + "\n";
         string += "DestID Distance Nexthop\n";

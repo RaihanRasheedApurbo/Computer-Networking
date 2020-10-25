@@ -1,5 +1,4 @@
 
-
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -12,12 +11,25 @@ public class ServerThread implements Runnable {
         this.networkUtility = networkUtility;
         this.endDevice = endDevice;
         System.out.println("Server Ready for client " + NetworkLayerServer.clientCount);
-        NetworkLayerServer.clientCount++;
+        //NetworkLayerServer.clientCount++;
+        //System.out.println("Server Ready for client " + NetworkLayerServer.clientCount);
         new Thread(this).start();
     }
 
     @Override
     public void run() {
+        networkUtility.write(endDevice);
+        networkUtility.write(NetworkLayerServer.endDevices);
+        Packet p = (Packet) networkUtility.read();
+        boolean sent = deliverPacket(p);
+        if(sent==true)
+        {
+            networkUtility.write("transfer successful with "+p.hopcount+"\nand the msg was: "+p.getMessage());
+        }
+        else
+        {
+            networkUtility.write("transfer unsuccessful with "+p.hopcount+"\nand the msg was: "+p.getMessage());
+        }
         /**
          * Synchronize actions with client.
          */
@@ -33,6 +45,7 @@ public class ServerThread implements Runnable {
 
 
     public Boolean deliverPacket(Packet p) {
+        
         return true;
         
         /*

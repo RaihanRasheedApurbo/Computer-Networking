@@ -56,14 +56,16 @@ public class NetworkLayerServer {
         //     router.printRoutingTable();
         // }
         
-        stateChanger = new RouterStateChanger();//Starts a new thread which turns on/off routers randomly depending on parameter Constants.LAMBDA
+        //stateChanger = new RouterStateChanger();//Starts a new thread which turns on/off routers randomly depending on parameter Constants.LAMBDA
 
         while(true) {
             try {
                 Socket socket = serverSocket.accept();
                 System.out.println("Client" + (clientCount + 1) + " attempted to connect");
+                
                 EndDevice endDevice = getClientDeviceSetup();
                 clientCount++;
+
                 endDevices.add(endDevice);
                 endDeviceMap.put(endDevice.getIpAddress(),endDevice);
                 new ServerThread(new NetworkUtility(socket), endDevice);
@@ -213,9 +215,9 @@ public class NetworkLayerServer {
             i++;
         }
 
-        EndDevice device = new EndDevice(ip, gateway, endDevices.size());
+        EndDevice device = new EndDevice(ip, gateway, endDevices.size()+1);
 
-        System.out.println("Device : " + ip + "::::" + gateway);
+        System.out.println("Device : " + ip + ":::: Gateway:" + gateway);
         return device;
     }
 
