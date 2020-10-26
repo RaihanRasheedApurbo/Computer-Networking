@@ -25,6 +25,7 @@ public class NetworkLayerServer {
     static Map<Integer, Integer> deviceIDtoRouterID = new HashMap<>();
     static Map<IPAddress, Integer> interfacetoRouterID = new HashMap<>();
     static Map<Integer, Router> routerMap = new HashMap<>();
+    static boolean complexDVR = true;
 
     public static void main(String[] args) {
 
@@ -52,7 +53,15 @@ public class NetworkLayerServer {
         // {
         //     System.out.println("routerID: "+r.getRouterId()+" routerState: "+r.getState());
         // }
-        simpleDVR(1);
+        if(complexDVR)
+        {
+            DVR(1);
+        }
+        else
+        {
+            simpleDVR(1);
+        }
+        
         for (Router router : routers) {
             //router.initiateRoutingTable();
             System.out.println("Router Status: "+router.getState());
@@ -105,6 +114,94 @@ public class NetworkLayerServer {
             }
         }
         */
+        RouterStateChanger.islocked = true;
+        Router firstRouter = routers.get(startingRouterId-1);
+        /// if first router is off then we have to 
+        /// find another router from array of routers that is active 
+        for(Router r: routers)   
+        {
+            if(firstRouter.getState()==true)
+            {
+                break;
+            }
+            if(r.getState()==true)
+            {
+                firstRouter = r;
+            }
+        }
+        if(firstRouter.getState()==false)
+        {
+            RouterStateChanger.islocked = false;
+            synchronized(RouterStateChanger.msg)
+            {
+                RouterStateChanger.msg.notify();
+            }
+            return;
+        }
+        
+        boolean convergence = false;
+        System.out.println("inside convergence loop!");
+        while(convergence==false)
+        {
+            convergence = true;
+            boolean visited[] = new boolean[routers.size()];
+            for(int i=0;i<visited.length;i++)
+            {
+                visited[i] = false;
+            }
+            
+            visited[startingRouterId-1] = true;
+            Queue<Router> q = new LinkedList<>(); 
+            q.add(firstRouter);
+            // for (Router router : routers) {
+            //     //router.initiateRoutingTable();
+            //     System.out.println("Router Status: "+router.getState());
+            //     router.printRoutingTable();
+                
+            // }
+            while(!q.isEmpty())
+            {
+                Router currentRouter = q.remove();
+                //System.out.println("currently in "+currentRouter.getRouterId());
+                // if(currentRouter.getRouterId()==3)
+                // {
+                //     for(int t: currentRouter.getNeighborRouterIDs())
+                //     {
+                //         System.out.println(t);
+                //     }
+                // }
+                for(int t: currentRouter.getNeighborRouterIDs())
+                {
+                    Router neighborRouter = routers.get(t-1);
+                    if(neighborRouter.getState()==false)
+                    {
+                        //System.out.println("this is off "+t);
+                        continue;
+                    }
+                    boolean changed = neighborRouter.sfupdateRoutingTable(currentRouter);
+                    if(changed == true)
+                    {
+                        convergence = false;
+                    }
+                    if(visited[t-1]==false)
+                    {
+                        //System.out.println("putting router no. "+t);
+                        q.add(neighborRouter);
+                        visited[t-1] = true;
+                    }
+                    
+                    
+                    
+
+                }
+            }
+        }
+        System.out.println("outside convergence loop!");
+        RouterStateChanger.islocked = false;
+        synchronized(RouterStateChanger.msg)
+        {
+            RouterStateChanger.msg.notify();
+        }
     }
 
     public static synchronized void simpleDVR(int startingRouterId) {

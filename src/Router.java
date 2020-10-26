@@ -69,7 +69,7 @@ public class Router {
      * for itself, distance=0; for any connected router with state=true, distance=1; otherwise distance=Constants.INFTY;
      */
     public void initiateRoutingTable() {
-    //     private int routerId;
+    // private int routerId;
     // private int numberOfInterfaces;
     // private ArrayList<IPAddress> interfaceAddresses;//list of IP address of all interfaces of the router
     // private ArrayList<RoutingTableEntry> routingTable;//used to implement DVR
@@ -170,7 +170,59 @@ public class Router {
     }
 
     public boolean sfupdateRoutingTable(Router neighbor) {
-        return true;
+        boolean isNeighbor = false; // check whether neighbor is truly neighbor
+        boolean change = false; // will return this value
+        for(int i:this.neighborRouterIDs)
+        {
+            if(i==neighbor.routerId)
+            {
+                isNeighbor = true;
+                break;
+            }
+        }
+        
+        
+        if(isNeighbor==false)
+        {
+            return change;
+        }
+        
+        if(neighbor.state==false)
+        {
+            // this.routingTable.get(neighbor.routerId-1).setDistance(Constants.INFINITY);
+            // this.routingTable.get(neighbor.routerId-1).setGatewayRouterId(-5);
+            for(RoutingTableEntry r: this.routingTable)
+            {
+                if(r.getGatewayRouterId()==neighbor.routerId)
+                {
+                    r.setDistance(Constants.INFINITY);
+                    r.setGatewayRouterId(-5);
+                }
+            }
+            change = true;
+        }
+        else
+        {
+            for(int i=0;i<this.routingTable.size();i++)
+            {
+                RoutingTableEntry thisRow = this.routingTable.get(i);
+                double dxy = thisRow.getDistance();
+                double dyz = neighbor.routingTable.get(i).getDistance();
+                double dxz = 1;
+                double d = dyz+dxz;
+                
+                if((thisRow.getGatewayRouterId()==neighbor.getRouterId() && thisRow.getDistance()!=d) || 
+                    (d<dxy && this.routerId != neighbor.getRoutingTable().get(i).getGatewayRouterId()))
+                {
+                    thisRow.setDistance(d);
+                    thisRow.setGatewayRouterId(neighbor.routerId);
+                    change = true;
+                }
+            }
+
+        }
+        return change;
+        
     }
 
     /**

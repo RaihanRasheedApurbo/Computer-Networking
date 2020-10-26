@@ -287,7 +287,15 @@ public class ServerThread implements Runnable {
                 if(routingTable.get(prevRouterID-1).getDistance()>1 && prevRouter.getState()==true)
                 {
                     routingTable.set(prevRouterID-1,new RoutingTableEntry(prevRouterID,1,prevRouterID));
-                    NetworkLayerServer.simpleDVR(currentRouter.getRouterId());
+                    if(NetworkLayerServer.complexDVR)
+                    {
+                        NetworkLayerServer.DVR(currentRouter.getRouterId());
+                    }
+                    else
+                    {
+                        NetworkLayerServer.simpleDVR(currentRouter.getRouterId());
+                    }
+                    
                 }
             }
             
@@ -301,7 +309,15 @@ public class ServerThread implements Runnable {
             if(nextHopRouter.getState() == false)
             {
                 routingTable.set(nextHopRouterID-1, new RoutingTableEntry(nextHopRouterID,Constants.INFINITY,-5));
-                NetworkLayerServer.simpleDVR(currentRouter.getRouterId());
+                if(NetworkLayerServer.complexDVR)
+                {
+                    NetworkLayerServer.DVR(currentRouter.getRouterId());
+                }
+                else
+                {
+                    NetworkLayerServer.simpleDVR(currentRouter.getRouterId());
+                }
+                
                 return false;
             }
             
