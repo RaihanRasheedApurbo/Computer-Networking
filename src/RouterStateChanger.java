@@ -34,7 +34,7 @@ public class RouterStateChanger implements Runnable {
                 //System.out.println("kill meh please "+d);
             }
             try {
-                Thread.sleep(1000);
+                Thread.sleep(10000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -48,7 +48,14 @@ public class RouterStateChanger implements Runnable {
         Random random = new Random(System.currentTimeMillis());
         int id = random.nextInt(NetworkLayerServer.routers.size());
         NetworkLayerServer.routers.get(id).revertState();
+        
         System.out.println("State Changed; Router ID: "+NetworkLayerServer.routers.get(id).getRouterId());
-
+        System.out.println("Currently turned off routers are: ");
+        for(Router r: NetworkLayerServer.routers)
+        {
+            if(r.getState()==false)
+            System.out.print(r.getRouterId()+" ");
+        }
+        System.out.println("\n");
     }
 }

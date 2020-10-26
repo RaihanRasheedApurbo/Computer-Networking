@@ -9,6 +9,7 @@ public class ServerThread implements Runnable {
 
     NetworkUtility networkUtility;
     EndDevice endDevice;
+    String response;
 
     ServerThread(NetworkUtility networkUtility, EndDevice endDevice) {
         this.networkUtility = networkUtility;
@@ -37,13 +38,15 @@ public class ServerThread implements Runnable {
             //System.out.println("hey 3");
             if(sent==true)
             {
-                networkUtility.write("transfer successful with "+p.hopcount+" and the msg was: "+p.getMessage());
+                response += "transfer successful with "+p.hopcount+" and the msg was: "+p.getMessage();
+                networkUtility.write(response);
                 networkUtility.write(true);
                 networkUtility.write(p.hopcount);
             }
             else
             {
-                networkUtility.write("transfer unsuccessful with "+p.hopcount+" and the msg was: "+p.getMessage());
+                response += "transfer unsuccessful with "+p.hopcount+" and the msg was: "+p.getMessage();
+                networkUtility.write(response);
                 networkUtility.write(false);
                 networkUtility.write(p.hopcount);
             }
@@ -244,6 +247,7 @@ public class ServerThread implements Runnable {
 
     public Boolean deliverPacket(Packet p) 
     {
+        response = "";
         Map<String, EndDevice> endDeviceMapWithString = NetworkLayerServer.endDeviceMapWithString;
         //Map<IPAddress, EndDevice> endDeviceMap = NetworkLayerServer.endDeviceMap;
         Map<Integer, Integer> deviceIDtoRouterID = NetworkLayerServer.deviceIDtoRouterID;
@@ -265,7 +269,8 @@ public class ServerThread implements Runnable {
 
         Router prevRouter = null;
         Router currentRouter = senderRouter;
-
+        response += "Hop no: "+p.hopcount+"\n";
+        response += currentRouter.strRoutingTable()+"\n";
         while(currentRouter!=receiverRouter)
         {
             if(p.hopcount >= Constants.INFINITY)
@@ -305,6 +310,8 @@ public class ServerThread implements Runnable {
             p.hopcount++;
             prevRouter = currentRouter;
             currentRouter = nextHopRouter;
+            response += "Hop no: "+p.hopcount+"\n";
+            response += currentRouter.strRoutingTable()+"\n";
         }
 
         return true;
