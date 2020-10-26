@@ -50,8 +50,9 @@ public class Client {
         
         for(int i=0;i<100;i++)
         {
-            String msg = "sending msg no "+i+1+" from "+thisDevice.getDeviceID();
+            //Thread.sleep(10);
             int id = random.nextInt(endDevices.size());
+            String msg = "sending msg no "+(i+1)+" from "+thisDevice.getDeviceID()+" to "+(id+1);
             String specialMsg = "";
             if(i==20)
             {
@@ -59,7 +60,18 @@ public class Client {
             }
             Packet p = new Packet(msg,specialMsg, thisDevice.getIpAddress(), endDevices.get(id).getIpAddress());
             networkUtility.write(p);
+            //System.out.println("hey");
             String response = (String) networkUtility.read();
+            Boolean success = (Boolean) networkUtility.read();
+            int hopCount = (Integer) networkUtility.read();
+            if(success==true)
+            {
+                totalHops+=hopCount;
+            }
+            else
+            {
+                totalDrop++;
+            }
             System.out.println("client "+thisDevice.getDeviceID()+": "+response);
         // private String message;
         // private String specialMessage;  //ex: "SHOW_ROUTE" request
@@ -69,6 +81,9 @@ public class Client {
 
 
         }
+        System.out.println("Total packet drop: "+(totalDrop));
+        System.out.println("Average hop: "+(totalHops/100.0));
+        networkUtility.write(new Packet("","STOP",null,null));
         networkUtility.closeConnection();
         
     }

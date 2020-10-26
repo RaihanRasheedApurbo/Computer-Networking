@@ -137,8 +137,8 @@ public class Router {
         
         if(neighbor.state==false)
         {
-            this.routingTable.get(neighbor.routerId-1).setDistance(Constants.INFINITY);
-            this.routingTable.get(neighbor.routerId-1).setGatewayRouterId(-5);
+            // this.routingTable.get(neighbor.routerId-1).setDistance(Constants.INFINITY);
+            // this.routingTable.get(neighbor.routerId-1).setGatewayRouterId(-5);
             for(RoutingTableEntry r: this.routingTable)
             {
                 if(r.getGatewayRouterId()==neighbor.routerId)

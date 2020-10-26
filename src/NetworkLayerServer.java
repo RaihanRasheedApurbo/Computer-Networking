@@ -19,6 +19,8 @@ public class NetworkLayerServer {
     static RouterStateChanger stateChanger = null;
     static Map<IPAddress,Integer> clientInterfaces = new HashMap<>(); //Each map entry represents number of client end devices connected to the interface
     static Map<IPAddress, EndDevice> endDeviceMap = new HashMap<>();
+    static Map<String, EndDevice> endDeviceMapWithString = new HashMap<>();
+
     static ArrayList<EndDevice> endDevices = new ArrayList<>();
     static Map<Integer, Integer> deviceIDtoRouterID = new HashMap<>();
     static Map<IPAddress, Integer> interfacetoRouterID = new HashMap<>();
@@ -51,12 +53,14 @@ public class NetworkLayerServer {
         //     System.out.println("routerID: "+r.getRouterId()+" routerState: "+r.getState());
         // }
         simpleDVR(1);
-        // for (Router router : routers) {
-        //     //router.initiateRoutingTable();
-        //     router.printRoutingTable();
-        // }
+        for (Router router : routers) {
+            //router.initiateRoutingTable();
+            System.out.println("Router Status: "+router.getState());
+            router.printRoutingTable();
+            
+        }
         
-        //stateChanger = new RouterStateChanger();//Starts a new thread which turns on/off routers randomly depending on parameter Constants.LAMBDA
+        stateChanger = new RouterStateChanger();//Starts a new thread which turns on/off routers randomly depending on parameter Constants.LAMBDA
 
         while(true) {
             try {
@@ -68,6 +72,7 @@ public class NetworkLayerServer {
 
                 endDevices.add(endDevice);
                 endDeviceMap.put(endDevice.getIpAddress(),endDevice);
+                endDeviceMapWithString.put(endDevice.getIpAddress().getString(),endDevice);
                 new ServerThread(new NetworkUtility(socket), endDevice);
             } catch (IOException ex) {
                 Logger.getLogger(NetworkLayerServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -116,7 +121,6 @@ public class NetworkLayerServer {
             if(r.getState()==true)
             {
                 firstRouter = r;
-                break;
             }
         }
         if(firstRouter.getState()==false)
@@ -209,7 +213,7 @@ public class NetworkLayerServer {
                 ip = new IPAddress(gateway.getBytes()[0] + "." + gateway.getBytes()[1] + "." + gateway.getBytes()[2] + "." + (value+2));
                 value++;
                 clientInterfaces.put(key, value);
-                deviceIDtoRouterID.put(endDevices.size(), interfacetoRouterID.get(key));
+                deviceIDtoRouterID.put(endDevices.size()+1, interfacetoRouterID.get(key));
                 break;
             }
             i++;
