@@ -76,6 +76,7 @@ public class Router {
     // private ArrayList<Integer> neighborRouterIDs;//Contains both "UP" and "DOWN" state routers
     // private Boolean state;//true represents "UP" state and false is for "DOWN" state
     // private Map<Integer, IPAddress> gatewayIDtoIP;
+        routingTable.clear();
         ArrayList<Router> routers = NetworkLayerServer.routers;
         int totalRouterCount = routers.size();
         for(int i=1;i<=totalRouterCount;i++)
@@ -102,6 +103,8 @@ public class Router {
                 
             }
         }
+        //NetworkLayerServer.DVR(this.routerId);
+        //NetworkLayerServer.simpleDVR(this.routerId);
         
     }
 
@@ -207,6 +210,11 @@ public class Router {
             {
                 RoutingTableEntry thisRow = this.routingTable.get(i);
                 double dxy = thisRow.getDistance();
+                if(i==15)
+                {
+                    System.out.println("kill me please!");
+                    
+                }
                 double dyz = neighbor.routingTable.get(i).getDistance();
                 double dxz = 1;
                 double d = dyz+dxz;

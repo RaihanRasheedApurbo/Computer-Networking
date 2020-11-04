@@ -1,0 +1,33 @@
+dvr with split-horizon and forced update
+router off - 3 10 14 15
+A client having gateway at router 4 sending 20 clients randomly
+total packet sent: 100
+Total packet drop: 36
+Average hop: 1.515625
+
+observation: As 4 of 15 router is off here that is around 26.67% so we can safely assume that 
+around 30% packets were directed towards those gateway router. so only 6% packets were
+affected for not having updated routing table. So it proves dvr with split-horizon and forced
+update reacts with network change in a good manner.
+
+
+simple dvr
+router off - 3 8 10 11
+A client having gateway at router 13 sending 23 clients randomly
+total packet sent: 100
+Total packet drop: 66
+Average hop: 1.0588235294117647
+
+observation: In this experiment we can see 4 routers are off like before. so dropping 30% packet
+would be close to ideal. But in this case though it had 23 clients it droped 66% packet which is
+way far from the advanced DVR algorithm that we used. Moreover while doing this experiment multiple 
+times DVR function was invoked by routers to update their table which wasn't the case for DVR 
+with split horizon forced update. So not only simpleDVR funciton is worse from the packet drop 
+perspective by a big margin but also it calls dvr routine more often than it counter parts which
+can introduce significant latency into the network.
+
+
+
+
+
+

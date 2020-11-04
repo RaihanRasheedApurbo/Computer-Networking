@@ -140,7 +140,7 @@ public class NetworkLayerServer {
         }
         
         boolean convergence = false;
-        System.out.println("inside convergence loop!");
+        //System.out.println("inside convergence loop!");
         while(convergence==false)
         {
             convergence = true;
@@ -196,7 +196,7 @@ public class NetworkLayerServer {
                 }
             }
         }
-        System.out.println("outside convergence loop!");
+        //System.out.println("outside convergence loop!");
         RouterStateChanger.islocked = false;
         synchronized(RouterStateChanger.msg)
         {
@@ -231,7 +231,7 @@ public class NetworkLayerServer {
         }
         
         boolean convergence = false;
-        System.out.println("inside convergence loop!");
+        //System.out.println("inside convergence loop!");
         while(convergence==false)
         {
             convergence = true;
@@ -282,7 +282,7 @@ public class NetworkLayerServer {
                 }
             }
         }
-        System.out.println("outside convergence loop!");
+        //System.out.println("outside convergence loop!");
         RouterStateChanger.islocked = false;
         synchronized(RouterStateChanger.msg)
         {

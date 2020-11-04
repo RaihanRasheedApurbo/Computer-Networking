@@ -34,7 +34,7 @@ public class RouterStateChanger implements Runnable {
                 //System.out.println("kill meh please "+d);
             }
             try {
-                Thread.sleep(10000);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

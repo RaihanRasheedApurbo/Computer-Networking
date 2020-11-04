@@ -49,10 +49,10 @@ public class Client {
             System.out.println("client: "+t.getDeviceID()+" Gateway: "+t.getGateway().getString()+" IP Adress: "+t.getIpAddress().getString());
         }
         Random random = new Random(System.currentTimeMillis());
-        int numberOfPacket = 10;
+        int numberOfPacket = 100;
         for(int i=0;i<numberOfPacket;i++)
         {
-            Thread.sleep(1000);
+            //Thread.sleep(1000);
             int id = random.nextInt(endDevices.size());
             String msg = "sending msg no "+(i+1)+" from "+thisDevice.getDeviceID()+" to "+(id+1);
             String specialMsg = "";
@@ -90,7 +90,8 @@ public class Client {
         }
         else
         {
-            System.out.println("Average hop: "+(totalHops/(numberOfPacket-totalDrop)));
+            double d =numberOfPacket;
+            System.out.println("Average hop: "+(totalHops/(d-totalDrop)));
         }
         
         networkUtility.write(new Packet("","STOP",null,null));

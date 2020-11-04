@@ -24,6 +24,8 @@ public class ServerThread implements Runnable {
     public void run() {
         networkUtility.write(endDevice);
         networkUtility.write(NetworkLayerServer.endDevices);
+        Map<Integer, Integer> deviceIDtoRouterID = NetworkLayerServer.deviceIDtoRouterID;
+        Map<String, EndDevice> endDeviceMapWithString = NetworkLayerServer.endDeviceMapWithString;
         while(true)
         {
             
@@ -36,16 +38,25 @@ public class ServerThread implements Runnable {
             //System.out.println("hey 2");
             boolean sent = deliverPacket(p);
             //System.out.println("hey 3");
+            EndDevice sender = endDeviceMapWithString.get(p.getSourceIP().getString());
+            EndDevice receiver = endDeviceMapWithString.get(p.getDestinationIP().getString());
+
+            int senderRouterID = deviceIDtoRouterID.get(sender.getDeviceID());
+            int recieverRouterID = deviceIDtoRouterID.get(receiver.getDeviceID());
+
+
             if(sent==true)
             {
-                response += "transfer successful with "+p.hopcount+" and the msg was: "+p.getMessage();
+                response += "transfer successful with "+p.hopcount+" hop";
+                response +="\nthe msg was: "+p.getMessage()+"\nFrom gateway router "+senderRouterID+" to router "+recieverRouterID;
                 networkUtility.write(response);
                 networkUtility.write(true);
                 networkUtility.write(p.hopcount);
             }
             else
             {
-                response += "transfer unsuccessful with "+p.hopcount+" and the msg was: "+p.getMessage();
+                response += "transfer unsuccessful with "+p.hopcount+" hop";
+                response +="\nthe msg was: "+p.getMessage()+"\nFrom gateway router "+senderRouterID+" to router "+recieverRouterID;
                 networkUtility.write(response);
                 networkUtility.write(false);
                 networkUtility.write(p.hopcount);
@@ -247,6 +258,11 @@ public class ServerThread implements Runnable {
 
     public Boolean deliverPacket(Packet p) 
     {
+        boolean report = false;
+        if(p.getSpecialMessage().equals("SHOW_ROUTE"))
+        {
+            report = true;
+        }
         response = "";
         Map<String, EndDevice> endDeviceMapWithString = NetworkLayerServer.endDeviceMapWithString;
         //Map<IPAddress, EndDevice> endDeviceMap = NetworkLayerServer.endDeviceMap;
@@ -269,8 +285,12 @@ public class ServerThread implements Runnable {
 
         Router prevRouter = null;
         Router currentRouter = senderRouter;
-        response += "Hop no: "+p.hopcount+"\n";
-        response += currentRouter.strRoutingTable()+"\n";
+        if(report)
+        {
+            response += "Hop no: "+p.hopcount+"\n";
+            response += currentRouter.strRoutingTable()+"\n";
+        }
+        
         while(currentRouter!=receiverRouter)
         {
             if(p.hopcount >= Constants.INFINITY)
@@ -326,8 +346,12 @@ public class ServerThread implements Runnable {
             p.hopcount++;
             prevRouter = currentRouter;
             currentRouter = nextHopRouter;
-            response += "Hop no: "+p.hopcount+"\n";
-            response += currentRouter.strRoutingTable()+"\n";
+            if(report)
+            {
+                response += "Hop no: "+p.hopcount+"\n";
+                response += currentRouter.strRoutingTable()+"\n";
+            }
+            
         }
 
         return true;
