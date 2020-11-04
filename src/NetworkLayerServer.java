@@ -25,7 +25,10 @@ public class NetworkLayerServer {
     static Map<Integer, Integer> deviceIDtoRouterID = new HashMap<>();
     static Map<IPAddress, Integer> interfacetoRouterID = new HashMap<>();
     static Map<Integer, Router> routerMap = new HashMap<>();
-    static boolean complexDVR = true;
+    static boolean complexDVR = false;
+    static int numberOfPacket = 0;
+    static int totalHop = 0;
+    static int packetDrop = 0;
 
     public static void main(String[] args) {
 

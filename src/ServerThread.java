@@ -32,6 +32,22 @@ public class ServerThread implements Runnable {
             Packet p = (Packet) networkUtility.read();
             if(p.getSpecialMessage().equals("STOP"))
             {
+                Integer numberOfPacket = (Integer ) networkUtility.read();
+                Integer totalHop = (Integer ) networkUtility.read();
+                Integer packetDrop = (Integer ) networkUtility.read();
+                NetworkLayerServer.numberOfPacket += numberOfPacket;
+                NetworkLayerServer.totalHop += totalHop;
+                NetworkLayerServer.packetDrop += packetDrop;
+
+                double d1 = NetworkLayerServer.numberOfPacket;
+                double d2 = NetworkLayerServer.totalHop;
+                double d3 = NetworkLayerServer.packetDrop;
+                System.out.println("numberofpacket: "+d1+"totalhop: "+d2+"packetdrop "+d3);
+                System.out.println("Total aggregated packet drop rate: "+(d3/d1*100)+"%");
+                if(d1!=d3)
+                {
+                    System.out.println("Total aggregated average hop: "+(d2/(d1-d3)));
+                }
                 networkUtility.closeConnection();
                 break;
             }

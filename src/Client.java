@@ -95,6 +95,9 @@ public class Client {
         }
         
         networkUtility.write(new Packet("","STOP",null,null));
+        networkUtility.write(numberOfPacket); 
+        networkUtility.write(totalHops);
+        networkUtility.write(totalDrop);
         networkUtility.closeConnection();
         
     }

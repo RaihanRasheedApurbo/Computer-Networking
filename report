@@ -28,6 +28,59 @@ can introduce significant latency into the network.
 
 
 
+const 0.01 
+complex dvr -
+Total aggregated packet drop rate: 77.03999999999999%
+Total aggregated average hop: 1.4464285714285714
+simple dvr -
+Total aggregated packet drop rate: 68.99%
+Total aggregated average hop: 1.8300548210254757
+
+const 0.05 
+complex dvr -
+Total aggregated packet drop rate: 92.30000000000001%
+Total aggregated average hop: 0.44545454545454544
+simple dvr -
+Total aggregated packet drop rate: 24.33%
+Total aggregated average hop: 2.2452755385225323
+
+const 0.10 
+complex dvr -
+Total aggregated packet drop rate: 59.19%
+Total aggregated average hop: 2.6454300416564567
+simple dvr -
+Total aggregated packet drop rate: 67.80000000000001%
+Total aggregated average hop: 1.6801242236024845
+
+const 0.25 
+complex dvr -
+Total aggregated packet drop rate: 85.5%
+Total aggregated average hop: 1.2441379310344827
+simple dvr -
+Total aggregated packet drop rate: 81.63%
+Total aggregated average hop: 1.4066412629286882
+
+const 0.50
+complex dvr -
+Total aggregated packet drop rate: 92.52%
+Total aggregated average hop: 0.2446524064171123
+simple dvr -
+Total aggregated packet drop rate: 83.31%
+Total aggregated average hop: 1.1821449970041942
+
+const 0.80
+complex dvr -
+Total aggregated packet drop rate: 89.78%
+Total aggregated average hop: 0.5420743639921722
+simple dvr -
+Total aggregated packet drop rate: 90.11%
+Total aggregated average hop: 0.8048533872598584
+
+
+
+
+
+
 
 
 
