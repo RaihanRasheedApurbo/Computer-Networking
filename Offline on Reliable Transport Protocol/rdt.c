@@ -1,10 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+// states of sender A
+#define WAITING_FOR_0  0
+#define WAITNG_ACK_FOR_0  1
+#define WAITING_FOR_1  2
+#define WAITNG_ACK_FOR_1  3
+// states of receiever B
+#define WAITING_TO_RECEIVE_0 0
+#define WAITING_TO_RECEIVE_1 1
 /* ******************************************************************
  ALTERNATING BIT AND GO-BACK-N NETWORK EMULATOR: SLIGHTLY MODIFIED
- FROM VERSION 1.1 of J.F.Kurose
+ FROM VERSION 1.1 of  
 
    This code should be used for PA2, unidirectional or bidirectional
    data transfer protocols (from A to B. Bidirectional transfer of data
@@ -39,6 +46,11 @@ struct pkt
     char payload[20];
 };
 
+// global state variables
+int currentStateA;
+int currentStateB;
+struct pkt *currentPacket;
+
 /********* FUNCTION PROTOTYPES. DEFINED IN THE LATER PART******************/
 void starttimer(int AorB, float increment);
 void stoptimer(int AorB);
@@ -47,10 +59,58 @@ void tolayer5(int AorB, char datasent[20]);
 
 /********* STUDENTS WRITE THE NEXT SEVEN ROUTINES *********/
 
+int checkSum(struct pkt p)
+{
+    int s = p.acknum + p.seqnum;
+    int len = strlen(p.payload);
+    int i;
+    for(i=0;i<len;i++)
+    {
+        int t = p.payload[i];
+        //printf("%d ",t);
+        s+= t;
+    }
+    //printf("%d\n",s);
+    return s;
+}
+
 /* called from layer 5, passed the data to be sent to other side */
 void A_output(struct msg message)
 {
-
+    printf("Application layer is trying to send msg in layer 4 system A\n");
+    printf("Current State of System A: %d\n",currentStateA);
+    if(currentStateA == WAITNG_ACK_FOR_0 || currentStateA == WAITNG_ACK_FOR_1)
+    {
+        printf("Application Layer packet dropped!\n");
+        return;
+    }
+    //printf("hello hi\n");
+    //printf("%s %d\n",message.data,strlen(message.data));
+    struct pkt p;
+    struct pkt *save = (struct pkt*) malloc(sizeof(struct pkt));
+    p.acknum = 0; // so far unused
+    save->acknum = 0;
+    if(currentStateA == WAITING_FOR_0)
+    {
+        p.seqnum = 0;
+        save->seqnum = 0;
+    }
+    else// waiting for 1
+    {
+        p.seqnum = 1;
+        save->seqnum = 1;
+    }
+    strcpy(p.payload,message.data);
+    strcpy(save->payload,message.data);
+    p.checksum = checkSum(p);
+    save->checksum = p.checksum;
+    
+    printf("SystemA: ack: %d, seq: %d, checkSum: %d, msg: %s\n",p.acknum,p.seqnum,p.checksum,p.payload);
+    tolayer3(0,p);
+    currentPacket = save;
+    starttimer(0,100);
+    currentStateA = (currentStateA == WAITING_FOR_0)? WAITNG_ACK_FOR_0 : WAITNG_ACK_FOR_1;
+    
 }
 
 /* need be completed only for extra credit */
@@ -62,20 +122,65 @@ void B_output(struct msg message)
 /* called from layer 3, when a packet arrives for layer 4 */
 void A_input(struct pkt packet)
 {
+    printf("Network layer has packet for layer4 in system A\n");
+    printf("Current State of System A: %d\n",currentStateA);
+    printf("System A: ack: %d, seq: %d, checkSum: %d, msg: %s\n",packet.acknum,packet.seqnum,packet.checksum,packet.payload);
+    if(currentStateA == WAITING_FOR_0 || currentStateA == WAITING_FOR_1)
+    {
+        printf("Network Layer packet dropped!\n");
+        return;
+    }
+    int desiredACKNum = (currentStateA == WAITNG_ACK_FOR_0)? 0 : 1;
+    if(checkSum(packet)!=packet.checksum || packet.acknum !=desiredACKNum)
+    {
+        // corrupted packet or wrong ack hance doing nothing;
+        return;
+    }
+
+    stoptimer(0);
+    if(currentPacket == 0)
+    {
+        printf("this case shouldn't arise!\n");
+    }
+    else
+    {
+        free(currentPacket);
+    }
+    
+    
+    currentStateA = (currentStateA == WAITNG_ACK_FOR_0)? WAITING_FOR_1 : WAITING_FOR_0;
 
 }
 
 /* called when A's timer goes off */
 void A_timerinterrupt(void)
 {
+    printf("interrupt occured for system A\n");
+    printf("Current State of System A: %d\n",currentStateA);
+    if(currentPacket == 0)
+    {
+        printf("this case shouldn't arise\n");
+    }
+    struct pkt p;
+    p.seqnum = currentPacket->seqnum;
+    p.checksum = currentPacket->checksum;
+    p.acknum = currentPacket->acknum;
+    strcpy(p.payload,currentPacket->payload);
 
+    printf("System A Resending: ack: %d, seq: %d, checkSum: %d, msg: %s\n",p.acknum,p.seqnum,p.checksum,p.payload);
+    starttimer(0,100);
+    tolayer3(0,p);
+    
+    
 }
 
 /* the following routine will be called once (only) before any other */
 /* entity A routines are called. You can use it to do any initialization */
 void A_init(void)
 {
-
+    currentStateA = WAITING_FOR_0;
+    currentStateB = WAITING_TO_RECEIVE_0;
+    currentPacket = 0;
 }
 
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
@@ -83,7 +188,40 @@ void A_init(void)
 /* called from layer 3, when a packet arrives for layer 4 at B*/
 void B_input(struct pkt packet)
 {
+    //printf("got the packet on b side \n");
+    printf("Network layer has packet for layer4 in system B\n");
+    int c = checkSum(packet);
+    printf("Current State of System B: %d\n",currentStateB);
+    printf("System B: ack: %d, seq: %d, checkSum: %d, msg: %s\n",packet.acknum,packet.seqnum,packet.checksum,packet.payload);
+    if(c!=packet.checksum || packet.seqnum != currentStateB)
+    {
+        printf("bad packet\n"); // courrpted or wrong packet
+        struct pkt p;
+        p.acknum = (currentStateB == WAITING_TO_RECEIVE_0)? 1 : 0;
+        p.seqnum = 0;
+        strcpy(p.payload,"dummy nack packet");
+        p.checksum = checkSum(p);
+        tolayer3(1,p);
+        
 
+    }
+    else
+    {
+        printf("good packet\n");
+        struct pkt p;
+        p.acknum = (currentStateB == WAITING_TO_RECEIVE_0)? 0 : 1;
+        p.seqnum = 0;
+        strcpy(p.payload,"dummy ack packet");
+        p.checksum = checkSum(p);
+        currentStateB = (currentStateB == WAITING_TO_RECEIVE_0)? WAITING_TO_RECEIVE_1 : WAITING_TO_RECEIVE_0;
+        //printf("System B: changed state... now state %d\n",currentStateB);
+        tolayer5(1,packet.payload);
+        tolayer3(1,p);
+        
+        
+    }
+    
+    
 }
 
 /* called when B's timer goes off */
@@ -96,7 +234,7 @@ void B_timerinterrupt(void)
 /* entity B routines are called. You can use it to do any initialization */
 void B_init(void)
 {
-
+    currentStateB = WAITING_TO_RECEIVE_0;
 }
 
 /*****************************************************************
@@ -161,8 +299,11 @@ int main()
     char c;
 
     init();
+    //printf("init done\n");
     A_init();
+    //printf("A_init done\n");
     B_init();
+    //printf("B_init done\n");
 
     while (1)
     {
@@ -174,7 +315,9 @@ int main()
             evlist->prev = NULL;
         if (TRACE >= 2)
         {
+            //printf("hi\n");
             printf("\nEVENT time: %f,", eventptr->evtime);
+            //printf("hello\n");
             printf("  type: %d", eventptr->evtype);
             if (eventptr->evtype == 0)
                 printf(", timerinterrupt  ");
@@ -184,7 +327,9 @@ int main()
                 printf(", fromlayer3 ");
             printf(" entity: %d\n", eventptr->eventity);
         }
+        //printf("kill me -2");
         time = eventptr->evtime; /* update time to next event time */
+        //printf("kill me -1\n");
         if (eventptr->evtype == FROM_LAYER5)
         {
             if (nsim < nsimmax)
@@ -204,10 +349,12 @@ int main()
                     printf("\n");
                 }
                 nsim++;
+                //printf("kill meh0\n");
                 if (eventptr->eventity == A)
                     A_output(msg2give);
                 else
                     B_output(msg2give);
+                //printf("kill meh\n");
             }
         }
         else if (eventptr->evtype == FROM_LAYER3)
@@ -250,16 +397,21 @@ void init() /* initialize the simulator */
     float jimsrand();
 
     printf("-----  Stop and Wait Network Simulator Version 1.1 -------- \n\n");
-    printf("Enter the number of messages to simulate: ");
-    scanf("%d",&nsimmax);
-    printf("Enter  packet loss probability [enter 0.0 for no loss]:");
-    scanf("%f",&lossprob);
-    printf("Enter packet corruption probability [0.0 for no corruption]:");
-    scanf("%f",&corruptprob);
-    printf("Enter average time between messages from sender's layer5 [ > 0.0]:");
-    scanf("%f",&lambda);
-    printf("Enter TRACE:");
-    scanf("%d",&TRACE);
+    // printf("Enter the number of messages to simulate: ");
+    // scanf("%d",&nsimmax);
+    // printf("Enter  packet loss probability [enter 0.0 for no loss]:");
+    // scanf("%f",&lossprob);
+    // printf("Enter packet corruption probability [0.0 for no corruption]:");
+    // scanf("%f",&corruptprob);
+    // printf("Enter average time between messages from sender's layer5 [ > 0.0]:");
+    // scanf("%f",&lambda);
+    // printf("Enter TRACE:");
+    // scanf("%d",&TRACE);
+    nsimmax = 5;
+    lossprob = 0.25;
+    corruptprob = 0.25;
+    lambda = 1000;
+    TRACE = 2;
 
     srand(9999); /* init random number generator */
     sum = 0.0;   /* test random number generator for students */
@@ -371,8 +523,10 @@ void printevlist(void)
     printf("--------------\nEvent List Follows:\n");
     for (q = evlist; q != NULL; q = q->next)
     {
+        //printf("hi1\n");
         printf("Event time: %f, type: %d entity: %d\n", q->evtime, q->evtype,
                q->eventity);
+        //printf("hello\n");
     }
     printf("--------------\n");
 }
