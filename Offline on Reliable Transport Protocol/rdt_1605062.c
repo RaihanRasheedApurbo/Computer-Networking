@@ -104,7 +104,7 @@ void A_output(struct msg message)
     strcpy(save->payload,message.data);
     p.checksum = checkSum(p);
     save->checksum = p.checksum;
-    
+    printf("System A sending new packet for the first time\n");
     printf("SystemA: ack: %d, seq: %d, checkSum: %d, msg: %s\n",p.acknum,p.seqnum,p.checksum,p.payload);
     tolayer3(0,p);
     currentPacket = save;
@@ -131,12 +131,19 @@ void A_input(struct pkt packet)
         return;
     }
     int desiredACKNum = (currentStateA == WAITNG_ACK_FOR_0)? 0 : 1;
-    if(checkSum(packet)!=packet.checksum || packet.acknum !=desiredACKNum)
+    if(checkSum(packet)!=packet.checksum )
     {
         // corrupted packet or wrong ack hance doing nothing;
+        printf("Packet is corrupted so doing nothing!\n");
         return;
     }
-
+    else if(packet.acknum !=desiredACKNum)
+    {
+        printf("Packet doesn't match desired ack number! hence doing nothing\n");
+        return;
+    }
+    
+    printf("Desired ack receieved!\n");
     stoptimer(0);
     if(currentPacket == 0)
     {
@@ -179,7 +186,6 @@ void A_timerinterrupt(void)
 void A_init(void)
 {
     currentStateA = WAITING_FOR_0;
-    currentStateB = WAITING_TO_RECEIVE_0;
     currentPacket = 0;
 }
 
@@ -195,7 +201,7 @@ void B_input(struct pkt packet)
     printf("System B: ack: %d, seq: %d, checkSum: %d, msg: %s\n",packet.acknum,packet.seqnum,packet.checksum,packet.payload);
     if(c!=packet.checksum || packet.seqnum != currentStateB)
     {
-        printf("bad packet\n"); // courrpted or wrong packet
+        printf("bad packet hence sending nack\n"); // courrpted or wrong packet
         struct pkt p;
         p.acknum = (currentStateB == WAITING_TO_RECEIVE_0)? 1 : 0;
         p.seqnum = 0;
@@ -207,7 +213,7 @@ void B_input(struct pkt packet)
     }
     else
     {
-        printf("good packet\n");
+        printf("good packet hence sending ack\n");
         struct pkt p;
         p.acknum = (currentStateB == WAITING_TO_RECEIVE_0)? 0 : 1;
         p.seqnum = 0;
@@ -407,9 +413,9 @@ void init() /* initialize the simulator */
     // scanf("%f",&lambda);
     // printf("Enter TRACE:");
     // scanf("%d",&TRACE);
-    nsimmax = 5;
-    lossprob = 0.25;
-    corruptprob = 0.25;
+    nsimmax = 10;
+    lossprob = 0.1;
+    corruptprob = 0.3;
     lambda = 1000;
     TRACE = 2;
 
