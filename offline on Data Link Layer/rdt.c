@@ -74,7 +74,7 @@ struct pkt *savedPacket_B;
 // my utitily functions
 int checkSum(struct pkt p)
 {
-    int s = p.acknum + p.seqnum;
+    int s = p.acknum + p.seqnum+p.type;
     int len = strlen(p.payload);
     int i;
     for(i=0;i<len;i++)
@@ -87,7 +87,7 @@ int checkSum(struct pkt p)
     return s;
 }
 
-void savePacket(struct pkt p,struct pkt *t)
+void savePacket(struct pkt p,int t)
 {
     struct pkt *save = (struct pkt*) malloc(sizeof(struct pkt));
     save->type = p.type;
@@ -95,7 +95,15 @@ void savePacket(struct pkt p,struct pkt *t)
     save->checksum = p.checksum;
     save->acknum = p.acknum;
     strcpy(save->payload,p.payload);
-    t = save;
+    if(t==0)
+    {
+        savedPacket_A = save;
+    }
+    else if(t==1)
+    {
+        savedPacket_B = save;
+    }
+
 }
 
 
@@ -133,12 +141,12 @@ void A_output(struct msg message)
     if(sendStateA == WAITING_FOR_0_A )
     {
         p.seqnum = 0;
-       
+
     }
     else
     {
         p.seqnum = 1;
-        
+
     }
 
     strcpy(p.payload,message.data);
@@ -147,7 +155,7 @@ void A_output(struct msg message)
     printf("System A sending new frame for the first time\n");
     printf("SystemA: type: %d, ack: %d, seq: %d, checkSum: %d, msg: %s\n",p.type,p.acknum,p.seqnum,p.checksum,p.payload);
     tolayer3(0,p);
-    savePacket(p,savedPacket_A);
+    savePacket(p,0);
     starttimer(0,100);
     sendStateA = (sendStateA == WAITING_FOR_0_A )? WAITNG_ACK_FOR_0_A : WAITNG_ACK_FOR_1_A;
 
@@ -156,9 +164,9 @@ void A_output(struct msg message)
 
 
 
-    
 
-    
+
+
 }
 
 /* need be completed only for extra credit */
@@ -187,12 +195,12 @@ void B_output(struct msg message)
     if(sendStateB == WAITING_FOR_0_B )
     {
         p.seqnum = 0;
-       
+
     }
     else
     {
         p.seqnum = 1;
-        
+
     }
 
     strcpy(p.payload,message.data);
@@ -201,10 +209,10 @@ void B_output(struct msg message)
     printf("System B sending new frame for the first time\n");
     printf("System B: type: %d, ack: %d, seq: %d, checkSum: %d, msg: %s\n",p.type,p.acknum,p.seqnum,p.checksum,p.payload);
     tolayer3(1,p);
-    savePacket(p,savedPacket_B);
+    savePacket(p,1);
     starttimer(1,100);
     sendStateB = (sendStateB == WAITING_FOR_0_B )? WAITNG_ACK_FOR_0_B : WAITNG_ACK_FOR_1_B;
-    
+
 }
 
 /* called from layer 3, when a packet arrives for layer 4 */
@@ -242,7 +250,7 @@ void A_input(struct pkt packet)
             strcpy(p.payload,"dummy nack packet");
             p.checksum = checkSum(p);
             tolayer3(0,p);
-            
+
         }
         else
         {
@@ -252,7 +260,7 @@ void A_input(struct pkt packet)
             tolayer5(0,packet.payload);
         }
         return;
-        
+
     }
     else if(packet.type == 1) // ack/nack frame
     {
@@ -281,13 +289,13 @@ void A_input(struct pkt packet)
                 {
                     free(savedPacket_A);
                 }
-                
+
                 sendStateA = (sendStateA == WAITNG_ACK_FOR_0_A)? WAITING_FOR_1_A : WAITING_FOR_0_A ;
                 return;
             }
-            
+
         }
-        
+
     }
     else if(packet.type == 2) // data and ack/nack both
     {
@@ -303,7 +311,7 @@ void A_input(struct pkt packet)
             strcpy(p.payload,"dummy nack packet");
             p.checksum = checkSum(p);
             tolayer3(0,p);
-            
+
         }
         else
         {
@@ -339,30 +347,47 @@ void A_input(struct pkt packet)
                 {
                     free(savedPacket_A);
                 }
-                
+
                 sendStateA = (sendStateA == WAITNG_ACK_FOR_0_A)? WAITING_FOR_1_A : WAITING_FOR_0_A ;
                 return;
             }
-            
+
         }
     }
-    
+
 }
 
 /* called when A's timer goes off */
 void A_timerinterrupt(void)
 {
+    printf("System A: interrupt occured for system A\n");
+    printf("Current send State of System A: %d\n",sendStateA);
+    if(savedPacket_A == 0)
+    {
+        printf("this case shouldn't arise\n");
+    }
+    struct pkt *currentPacket_A = savedPacket_A;
 
+    struct pkt p;
+    p.type = currentPacket_A->type;
+    p.seqnum = currentPacket_A->seqnum;
+    p.checksum = currentPacket_A->checksum;
+    p.acknum = currentPacket_A->acknum;
+    strcpy(p.payload,currentPacket_A->payload);
+
+    printf("System A Resending: type: %d, ack: %d, seq: %d, checkSum: %d, msg: %s\n",p.type,p.acknum,p.seqnum,p.checksum,p.payload);
+    starttimer(0,100);
+    tolayer3(0,p);
 }
 
 /* the following routine will be called once (only) before any other */
-/* entity A routines are called. You can use it to do any initialization */
+//entity A routines are called. You can use it to do any initialization
 void A_init(void)
 {
     sendStateA = WAITING_FOR_0_A;
     receStateA = WAITING_TO_RECEIVE_0_A;
     savedPacket_A = 0;
-    piggyBagA = EMPTY; 
+    piggyBagA = EMPTY;
 
 }
 
@@ -403,7 +428,7 @@ void B_input(struct pkt packet)
             strcpy(p.payload,"dummy nack packet");
             p.checksum = checkSum(p);
             tolayer3(1,p);
-            
+
         }
         else
         {
@@ -413,7 +438,7 @@ void B_input(struct pkt packet)
             tolayer5(1,packet.payload);
         }
         return;
-        
+
     }
     else if(packet.type == 1) // ack/nack frame
     {
@@ -442,13 +467,13 @@ void B_input(struct pkt packet)
                 {
                     free(savedPacket_B);
                 }
-                
+
                 sendStateB = (sendStateB == WAITNG_ACK_FOR_0_B)? WAITING_FOR_1_B : WAITING_FOR_0_B ;
                 return;
             }
-            
+
         }
-        
+
     }
     else if(packet.type == 2) // data and ack/nack both
     {
@@ -464,7 +489,7 @@ void B_input(struct pkt packet)
             strcpy(p.payload,"dummy nack packet");
             p.checksum = checkSum(p);
             tolayer3(1,p);
-            
+
         }
         else
         {
@@ -499,11 +524,11 @@ void B_input(struct pkt packet)
                 {
                     free(savedPacket_B);
                 }
-                
+
                 sendStateB = (sendStateB == WAITNG_ACK_FOR_0_B)? WAITING_FOR_1_B : WAITING_FOR_0_B ;
                 return;
             }
-            
+
         }
     }
 }
@@ -511,7 +536,24 @@ void B_input(struct pkt packet)
 /* called when B's timer goes off */
 void B_timerinterrupt(void)
 {
-    printf("  B_timerinterrupt: B doesn't have a timer. ignore.\n");
+    printf("System B: interrupt occured for system B\n");
+    printf("Current send State of System B: %d\n",sendStateB);
+    if(savedPacket_B == 0)
+    {
+        printf("this case shouldn't arise\n");
+    }
+    struct pkt *currentPacket_B = savedPacket_B;
+
+    struct pkt p;
+    p.type = currentPacket_B->type;
+    p.seqnum = currentPacket_B->seqnum;
+    p.checksum = currentPacket_B->checksum;
+    p.acknum = currentPacket_B->acknum;
+    strcpy(p.payload,currentPacket_B->payload);
+
+    printf("System B Resending: type: %d, ack: %d, seq: %d, checkSum: %d, msg: %s\n",p.type,p.acknum,p.seqnum,p.checksum,p.payload);
+    starttimer(1,100);
+    tolayer3(1,p);
 }
 
 /* the following rouytine will be called once (only) before any other */
@@ -637,6 +679,7 @@ int main()
         }
         else if (eventptr->evtype == FROM_LAYER3)
         {
+            pkt2give.type = eventptr->pktptr->type;
             pkt2give.seqnum = eventptr->pktptr->seqnum;
             pkt2give.acknum = eventptr->pktptr->acknum;
             pkt2give.checksum = eventptr->pktptr->checksum;
@@ -662,10 +705,10 @@ int main()
         free(eventptr);
     }
 
-terminate:
+    terminate:
     printf(
-        " Simulator terminated at time %f\n after sending %d msgs from layer5\n",
-        time, nsim);
+            " Simulator terminated at time %f\n after sending %d msgs from layer5\n",
+            time, nsim);
 }
 
 void init() /* initialize the simulator */
@@ -675,16 +718,21 @@ void init() /* initialize the simulator */
     float jimsrand();
 
     printf("-----  Stop and Wait Network Simulator Version 1.1 -------- \n\n");
-    printf("Enter the number of messages to simulate: ");
-    scanf("%d",&nsimmax);
-    printf("Enter  packet loss probability [enter 0.0 for no loss]:");
-    scanf("%f",&lossprob);
-    printf("Enter packet corruption probability [0.0 for no corruption]:");
-    scanf("%f",&corruptprob);
-    printf("Enter average time between messages from sender's layer5 [ > 0.0]:");
-    scanf("%f",&lambda);
-    printf("Enter TRACE:");
-    scanf("%d",&TRACE);
+//    printf("Enter the number of messages to simulate: ");
+//    scanf("%d",&nsimmax);
+//    printf("Enter  packet loss probability [enter 0.0 for no loss]:");
+//    scanf("%f",&lossprob);
+//    printf("Enter packet corruption probability [0.0 for no corruption]:");
+//    scanf("%f",&corruptprob);
+//    printf("Enter average time between messages from sender's layer5 [ > 0.0]:");
+//    scanf("%f",&lambda);
+//    printf("Enter TRACE:");
+//    scanf("%d",&TRACE);
+    nsimmax = 5;
+    lossprob = 0.0;
+    corruptprob = 0.0;
+    lambda = 1000;
+    TRACE = 2;
 
     srand(9999); /* init random number generator */
     sum = 0.0;   /* test random number generator for students */
@@ -882,6 +930,7 @@ void tolayer3(int AorB, struct pkt packet)
     /* make a copy of the packet student just gave me since he/she may decide */
     /* to do something with the packet after we return back to him/her */
     mypktptr = (struct pkt *)malloc(sizeof(struct pkt));
+    mypktptr->type = packet.type;
     mypktptr->seqnum = packet.seqnum;
     mypktptr->acknum = packet.acknum;
     mypktptr->checksum = packet.checksum;
