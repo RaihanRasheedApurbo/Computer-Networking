@@ -2,13 +2,20 @@
 #include <stdlib.h>
 #include <string.h>
 // states of sender A
-#define WAITING_FOR_0  0
-#define WAITNG_ACK_FOR_0  1
-#define WAITING_FOR_1  2
-#define WAITNG_ACK_FOR_1  3
+#define WAITING_FOR_0_A   0
+#define WAITNG_ACK_FOR_0_A  1
+#define WAITING_FOR_1_A  2
+#define WAITNG_ACK_FOR_1_A 3
+#define WAITING_TO_RECEIVE_0_A 4
+#define WAITING_TO_RECEIVE_1_A 5
 // states of receiever B
-#define WAITING_TO_RECEIVE_0 0
-#define WAITING_TO_RECEIVE_1 1
+#define WAITING_TO_RECEIVE_0_B 0
+#define WAITING_TO_RECEIVE_1_B 1
+#define WAITING_FOR_0_B 2
+#define WAITNG_ACK_FOR_0_B 3
+#define WAITING_FOR_1_B 4
+#define WAITNG_ACK_FOR_1_B 5
+
 /* ******************************************************************
  ALTERNATING BIT AND GO-BACK-N NETWORK EMULATOR: SLIGHTLY MODIFIED
  FROM VERSION 1.1 of  
@@ -40,6 +47,7 @@ struct msg
 /* students must follow. */
 struct pkt
 {
+    int type;
     int seqnum;
     int acknum;
     int checksum;
@@ -49,7 +57,8 @@ struct pkt
 // global state variables
 int currentStateA;
 int currentStateB;
-struct pkt *currentPacket;
+struct pkt *currentPacket_A;
+struct pkt *currentPacket_B;
 
 /********* FUNCTION PROTOTYPES. DEFINED IN THE LATER PART******************/
 void starttimer(int AorB, float increment);
@@ -77,9 +86,11 @@ int checkSum(struct pkt p)
 /* called from layer 5, passed the data to be sent to other side */
 void A_output(struct msg message)
 {
+    
+
     printf("Application layer is trying to send msg in layer 4 system A\n");
     printf("Current State of System A: %d\n",currentStateA);
-    if(currentStateA == WAITNG_ACK_FOR_0 || currentStateA == WAITNG_ACK_FOR_1)
+    if(currentStateA == WAITNG_ACK_FOR_0_A || currentStateA == WAITNG_ACK_FOR_1_A)
     {
         printf("Application Layer packet dropped!\n");
         return;
@@ -90,7 +101,7 @@ void A_output(struct msg message)
     struct pkt *save = (struct pkt*) malloc(sizeof(struct pkt));
     p.acknum = 0; // so far unused
     save->acknum = 0;
-    if(currentStateA == WAITING_FOR_0)
+    if(currentStateA == WAITING_FOR_0_A )
     {
         p.seqnum = 0;
         save->seqnum = 0;
@@ -107,15 +118,51 @@ void A_output(struct msg message)
     printf("System A sending new packet for the first time\n");
     printf("SystemA: ack: %d, seq: %d, checkSum: %d, msg: %s\n",p.acknum,p.seqnum,p.checksum,p.payload);
     tolayer3(0,p);
-    currentPacket = save;
+    currentPacket_A = save;
     starttimer(0,100);
-    currentStateA = (currentStateA == WAITING_FOR_0)? WAITNG_ACK_FOR_0 : WAITNG_ACK_FOR_1;
+    currentStateA = (currentStateA == WAITING_FOR_0_A )? WAITNG_ACK_FOR_0_A : WAITNG_ACK_FOR_1_A;
+
+
+
     
 }
 
 /* need be completed only for extra credit */
 void B_output(struct msg message)
 {
+    printf("Application layer is trying to send msg in layer 4 system B\n");
+    printf("Current State of System B: %d\n",currentStateB);
+    if(currentStateB == WAITNG_ACK_FOR_0_B || currentStateB == WAITNG_ACK_FOR_1_B)
+    {
+        printf("Application Layer packet dropped in system B!\n");
+        return;
+    }
+    //printf("hello hi\n");
+    //printf("%s %d\n",message.data,strlen(message.data));
+    struct pkt p;
+    struct pkt *save = (struct pkt*) malloc(sizeof(struct pkt));
+    p.acknum = 0; // so far unused
+    save->acknum = 0;
+    if(currentStateB == WAITING_FOR_0_B )
+    {
+        p.seqnum = 0;
+        save->seqnum = 0;
+    }
+    else// waiting for 1
+    {
+        p.seqnum = 1;
+        save->seqnum = 1;
+    }
+    strcpy(p.payload,message.data);
+    strcpy(save->payload,message.data);
+    p.checksum = checkSum(p);
+    save->checksum = p.checksum;
+    printf("System B sending new packet for the first time\n");
+    printf("System B: ack: %d, seq: %d, checkSum: %d, msg: %s\n",p.acknum,p.seqnum,p.checksum,p.payload);
+    tolayer3(1,p);
+    currentPacket_B = save;
+    starttimer(1,100);
+    currentStateB = (currentStateB == WAITING_FOR_0_B )? WAITNG_ACK_FOR_0_B : WAITNG_ACK_FOR_1_B;
 
 }
 
@@ -124,13 +171,13 @@ void A_input(struct pkt packet)
 {
     printf("Network layer has packet for layer4 in system A\n");
     printf("Current State of System A: %d\n",currentStateA);
-    printf("System A: ack: %d, seq: %d, checkSum: %d, msg: %s\n",packet.acknum,packet.seqnum,packet.checksum,packet.payload);
-    if(currentStateA == WAITING_FOR_0 || currentStateA == WAITING_FOR_1)
+    printf("System A: type: %d, ack: %d, seq: %d, checkSum: %d, msg: %s\n",packet.type,packet.acknum,packet.seqnum,packet.checksum,packet.payload);
+    if(currentStateA == WAITING_FOR_0_A  || currentStateA == WAITING_FOR_1_A)
     {
         printf("Network Layer packet dropped!\n");
         return;
     }
-    int desiredACKNum = (currentStateA == WAITNG_ACK_FOR_0)? 0 : 1;
+    int desiredACKNum = (currentStateA == WAITNG_ACK_FOR_0_A)? 0 : 1;
     if(checkSum(packet)!=packet.checksum )
     {
         // corrupted packet or wrong ack hance doing nothing;
@@ -145,17 +192,17 @@ void A_input(struct pkt packet)
     
     printf("Desired ack receieved!\n");
     stoptimer(0);
-    if(currentPacket == 0)
+    if(currentPacket_A == 0)
     {
         printf("this case shouldn't arise!\n");
     }
     else
     {
-        free(currentPacket);
+        free(currentPacket_A);
     }
     
     
-    currentStateA = (currentStateA == WAITNG_ACK_FOR_0)? WAITING_FOR_1 : WAITING_FOR_0;
+    currentStateA = (currentStateA == WAITNG_ACK_FOR_0_A)? WAITING_FOR_1_A : WAITING_FOR_0_A ;
 
 }
 
@@ -164,15 +211,15 @@ void A_timerinterrupt(void)
 {
     printf("interrupt occured for system A\n");
     printf("Current State of System A: %d\n",currentStateA);
-    if(currentPacket == 0)
+    if(currentPacket_A == 0)
     {
         printf("this case shouldn't arise\n");
     }
     struct pkt p;
-    p.seqnum = currentPacket->seqnum;
-    p.checksum = currentPacket->checksum;
-    p.acknum = currentPacket->acknum;
-    strcpy(p.payload,currentPacket->payload);
+    p.seqnum = currentPacket_A->seqnum;
+    p.checksum = currentPacket_A->checksum;
+    p.acknum = currentPacket_A->acknum;
+    strcpy(p.payload,currentPacket_A->payload);
 
     printf("System A Resending: ack: %d, seq: %d, checkSum: %d, msg: %s\n",p.acknum,p.seqnum,p.checksum,p.payload);
     starttimer(0,100);
@@ -185,8 +232,8 @@ void A_timerinterrupt(void)
 /* entity A routines are called. You can use it to do any initialization */
 void A_init(void)
 {
-    currentStateA = WAITING_FOR_0;
-    currentPacket = 0;
+    currentStateA = WAITING_FOR_0_A ;
+    currentPacket_A = 0;
 }
 
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
@@ -203,7 +250,7 @@ void B_input(struct pkt packet)
     {
         printf("bad packet hence sending nack\n"); // courrpted or wrong packet
         struct pkt p;
-        p.acknum = (currentStateB == WAITING_TO_RECEIVE_0)? 1 : 0;
+        p.acknum = (currentStateB == WAITING_TO_RECEIVE_0_B)? 1 : 0;
         p.seqnum = 0;
         strcpy(p.payload,"dummy nack packet");
         p.checksum = checkSum(p);
@@ -215,11 +262,11 @@ void B_input(struct pkt packet)
     {
         printf("good packet hence sending ack\n");
         struct pkt p;
-        p.acknum = (currentStateB == WAITING_TO_RECEIVE_0)? 0 : 1;
+        p.acknum = (currentStateB == WAITING_TO_RECEIVE_0_B)? 0 : 1;
         p.seqnum = 0;
         strcpy(p.payload,"dummy ack packet");
         p.checksum = checkSum(p);
-        currentStateB = (currentStateB == WAITING_TO_RECEIVE_0)? WAITING_TO_RECEIVE_1 : WAITING_TO_RECEIVE_0;
+        currentStateB = (currentStateB == WAITING_TO_RECEIVE_0_B)? WAITING_TO_RECEIVE_1_B : WAITING_TO_RECEIVE_0_B;
         //printf("System B: changed state... now state %d\n",currentStateB);
         tolayer5(1,packet.payload);
         tolayer3(1,p);
@@ -240,7 +287,8 @@ void B_timerinterrupt(void)
 /* entity B routines are called. You can use it to do any initialization */
 void B_init(void)
 {
-    currentStateB = WAITING_TO_RECEIVE_0;
+    currentStateB = WAITING_TO_RECEIVE_0_B;
+    currentPacket_B = 0;
 }
 
 /*****************************************************************
