@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 // piggybag state
-#define EMPTY -5
+#define EMPTY 5
 #define SEQ0 0
 #define SEQ1 1
 // states of sender A
@@ -23,6 +24,8 @@
 #define WAITING_TO_RECEIVE_0_B 4
 #define WAITING_TO_RECEIVE_1_B 5
 
+
+
 /* ******************************************************************
  ALTERNATING BIT AND GO-BACK-N NETWORK EMULATOR: SLIGHTLY MODIFIED
  FROM VERSION 1.1 of J.F.Kurose
@@ -38,27 +41,31 @@
        (although some can be lost).
 **********************************************************************/
 
-#define BIDIRECTIONAL 1 /* change to 1 if you're doing extra credit */
+#define BIDIRECTIONAL 0 /* change to 1 if you're doing extra credit */
 /* and write a routine called B_output */
 
-/* a "msg" is the data unit passed from layer 5 (teachers code) to layer  */
+/* a "pkt" is the data unit passed from layer 5 (teachers code) to layer  */
 /* 4 (students' code).  It contains the data (characters) to be delivered */
 /* to layer 5 via the students transport level protocol entities.         */
-struct msg
+struct pkt
 {
-    char data[20];
+    char data[4];
 };
+
+char pol[] = "1100000000000001";  // x^15+x^14+1;
+
+int CRCSTEP = 0;
 
 /* a packet is the data unit passed from layer 4 (students code) to layer */
 /* 3 (teachers code).  Note the pre-defined packet structure, which all   */
 /* students must follow. */
-struct pkt
+struct frame
 {
     int type;
     int seqnum;
     int acknum;
     int checksum;
-    char payload[20];
+    char payload[4];
 };
 
 //global state variables
@@ -68,11 +75,12 @@ int sendStateB;
 int receStateB;
 int piggyBagA;
 int piggyBagB;
-struct pkt *savedPacket_A;
-struct pkt *savedPacket_B;
+int PIGGYBAGENABLED;
+struct frame *savedPacket_A;
+struct frame *savedPacket_B;
 
 // my utitily functions
-int checkSum(struct pkt p)
+int checkSum(struct frame p)
 {
     int s = p.acknum + p.seqnum+p.type;
     int len = strlen(p.payload);
@@ -87,9 +95,9 @@ int checkSum(struct pkt p)
     return s;
 }
 
-void savePacket(struct pkt p,int t)
+void savePacket(struct frame p,int t)
 {
-    struct pkt *save = (struct pkt*) malloc(sizeof(struct pkt));
+    struct frame *save = (struct frame*) malloc(sizeof(struct frame));
     save->type = p.type;
     save->seqnum = p.seqnum;
     save->checksum = p.checksum;
@@ -106,19 +114,259 @@ void savePacket(struct pkt p,int t)
 
 }
 
+void getBinString(int k, char s[],int ind)
+{
+    int c = 0;
+    while(k>1)
+    {
+        int rem = k%2;
+        if(rem==0)
+        {
+            s[ind-c] = '0';
+        }
+        else
+        {
+            s[ind-c] = '1';
+        }
+        k = k/2;
+        c++;
+    }
+    if(k==0)
+    {
+        s[ind-c] = '0';
+    }
+    else
+    {
+        s[ind-c] = '1';
+    }
+//    c++;
+//    s[ind-c] = '\0';
+    return;
+}
+
+int crcChecksum(struct frame p)
+{
+//    p.type = 2;
+//    p.acknum = 1;
+//    p.seqnum = 1;
+    int a[4];
+    a[0] = p.payload[0];
+    a[1] = p.payload[1];
+    a[2] = p.payload[2];
+    a[3] = p.payload[3];
+    int t = 0;
+    t = t|a[0];
+    t = t<<8;
+    t = t|a[1];
+    t = t<<8;
+    t = t|a[2];
+    t = t<<8;
+    t = t|a[3];
+    int totalVariable = 4;
+    int eachSize = 32; // in bit
+    int polLen = strlen(pol);
+    int totalStringSize = totalVariable*eachSize+1+(polLen-1); // +1 is for empty string and pollen-1 for appending r-1 0's
+    char *s = (char *) malloc(totalStringSize);
+    int len = totalStringSize-1;
+    int i;
+    for(i=0;i<len;i++)
+    {
+        s[i] = '0';
+    }
+    s[len] = '\0';
+    //int k = 19;
+    i = 1;
+    getBinString(p.type,s,i*32-1);
+    //printf("hey:%s killmeh\n",s);
+    i++;
+    getBinString(p.acknum,s,i*32-1);
+    //printf("hey:%s killmeh\n",s);
+    i++;
+    getBinString(p.seqnum,s,i*32-1);
+    //printf("hey:%s killmeh\n",s);
+    i++;
+    getBinString(t,s,i*32-1);
+    //printf("hey:%s killmeh\n",s);
+    i++;
+
+    //s[125] = '0'; for testing corruption
+    int first1 = 0;
+    int remStartingIndex = len-(polLen-1);
+    //printf("size: %d, remStartingIndex: %d, polLen: %d\n",strlen(s),remStartingIndex,polLen);
+
+    if(CRCSTEP == 1)
+    {
+        printf("Polynomial generator function: %s\n",pol);
+        printf("CRC Input bit string: \n%s\n",s);
+    }
+
+    char *s1 = (char *) malloc(totalStringSize);
+    strcpy(s1,s);
+
+    while(first1<remStartingIndex)
+    {
+        if(s[first1]=='1')
+        {
+            //printf("1 found in %d\n",first1);
+            for(i=0;i<polLen;i++)
+            {
+                if(pol[i]!=s[first1+i])
+                {
+                    s[first1+i] = '1';
+                }
+                else
+                {
+                    s[first1+i] = '0';
+                }
+            }
+            //printf("after xor: %s\n",s+first1);
+        }
+        first1++;
+    }
+    //printf("%s\n",s);
+    //printf("%s\n",s1);
+
+    int lastIndex = len-1;
+    int checkSum = 0;
+    for(i=0;i<polLen-1;i++)
+    {
+        s1[lastIndex-i] = s[lastIndex-i];
+        if(s[lastIndex-i]=='1')
+        {
+            checkSum += pow(2,i);
+        }
+
+    }
+    //printf("hi");
+
+    if(CRCSTEP == 1)
+    {
+        printf("Calculated CRC: \n%s\n",s1);
+    }
+
+    //0000101011000011 =2755
+    //0100101011000100 = 19140
+    //printf("hey:%d killmeh\n",checkSum);
+    return checkSum;
+}
+
+int verifyCrcChecksum(struct frame p) {
+//    p.type = 2;
+//    p.acknum = 1;
+//    p.seqnum = 1;
+//    p.checksum = 19140;
+    int a[4];
+    a[0] = p.payload[0];
+    a[1] = p.payload[1];
+    a[2] = p.payload[2];
+    a[3] = p.payload[3];
+//    a[0] = 'a';
+//    a[1] = 'b';
+//    a[2] = 'c';
+//    a[3] = 'd';
+    int t = 0;
+    t = t | a[0];
+    t = t << 8;
+    t = t | a[1];
+    t = t << 8;
+    t = t | a[2];
+    t = t << 8;
+    t = t | a[3];
+    int totalVariable = 4;
+    int eachSize = 32; // in bit
+    int polLen = strlen(pol);
+    int totalStringSize =
+            totalVariable * eachSize + 1 + (polLen - 1); // +1 is for empty string and pollen-1 for appending r-1 0's
+    char *s = (char *) malloc(totalStringSize);
+    int len = totalStringSize - 1;
+    int i;
+    for (i = 0; i < len; i++) {
+        s[i] = '0';
+    }
+    s[len] = '\0';
+    //int k = 19;
+    i = 1;
+    getBinString(p.type, s, i * 32 - 1);
+    //printf("hey:%s killmeh\n",s);
+    i++;
+    getBinString(p.acknum, s, i * 32 - 1);
+    //printf("hey:%s killmeh\n",s);
+    i++;
+    getBinString(p.seqnum, s, i * 32 - 1);
+    //printf("hey:%s killmeh\n",s);
+    i++;
+    getBinString(t, s, i * 32 - 1);
+    //printf("hey:%s killmeh\n",s);
+    i++;
+    getBinString(p.checksum, s, len - 1);  // this part is just changed...
+    //printf("hey:%s killmeh\n",s);
+    i++;
+
+    if (CRCSTEP == 1)
+    {
+        printf("Polynomial generator function: %s\n",pol);
+        printf("CRC Input bit string: \n%s\n",s);
+    }
+
+    //s[125] = '0'; for testing corruption
+    int first1 = 0;
+    int remStartingIndex = len-(polLen-1);
+    //printf("size: %d, remStartingIndex: %d, polLen: %d\n",strlen(s),remStartingIndex,polLen);
+    while(first1<remStartingIndex)
+    {
+        if(s[first1]=='1')
+        {
+            //printf("1 found in %d\n",first1);
+            for(i=0;i<polLen;i++)
+            {
+                if(pol[i]!=s[first1+i])
+                {
+                    s[first1+i] = '1';
+                }
+                else
+                {
+                    s[first1+i] = '0';
+                }
+            }
+            //printf("after xor: %s\n",s+first1);
+        }
+        first1++;
+    }
+
+    int lastIndex = len-1;
+    int checkSum = 0;
+    for(i=0;i<polLen-1;i++)
+    {
+        if(s[lastIndex-i]=='1')
+        {
+            checkSum += pow(2,i);
+        }
+
+    }
+
+    //0000101011000011 =2755
+    //0100101011000100 = 19140
+    //printf("hey:%d killmeh\n",checkSum);
+    if(checkSum!=0 && CRCSTEP == 1)
+    {
+        printf("Data transmission error occured because checkSum: %d is not equal to 0\n",checkSum);
+    }
+    return checkSum;
+}
+
 
 /********* FUNCTION PROTOTYPES. DEFINED IN THE LATER PART******************/
 void starttimer(int AorB, float increment);
 void stoptimer(int AorB);
-void tolayer3(int AorB, struct pkt packet);
-void tolayer5(int AorB, char datasent[20]);
+void tolayer1(int AorB, struct frame packet);
+void tolayer3(int AorB, char datasent[4]);
 
 /********* STUDENTS WRITE THE NEXT SEVEN ROUTINES *********/
 
 /* called from layer 5, passed the data to be sent to other side */
-void A_output(struct msg message)
+void A_output(struct pkt message)
 {
-    printf("network layer is trying to send pkt in layer 2 in system A\n");
+    printf("network layer is trying to send frame in layer 2 in system A\n");
     printf("Current sendState of System A: %d\n",sendStateA);
     if(sendStateA == WAITNG_ACK_FOR_0_A || sendStateA == WAITNG_ACK_FOR_1_A)
     {
@@ -126,11 +374,13 @@ void A_output(struct msg message)
         return;
     }
 
-    struct pkt p;
-    if(piggyBagA!=EMPTY)
+    struct frame p;
+    if(piggyBagA!=EMPTY && PIGGYBAGENABLED == 1)
     {
         p.type = 2; // piggybagged data frame
         p.acknum = piggyBagA;
+        piggyBagA = EMPTY;
+        printf("System A: piggybagged data detected. Sending ack with current dataframe\n");
     }
     else
     {
@@ -150,11 +400,11 @@ void A_output(struct msg message)
     }
 
     strcpy(p.payload,message.data);
-    p.checksum = checkSum(p);
+    p.checksum = crcChecksum(p);
 
     printf("System A sending new frame for the first time\n");
-    printf("SystemA: type: %d, ack: %d, seq: %d, checkSum: %d, msg: %s\n",p.type,p.acknum,p.seqnum,p.checksum,p.payload);
-    tolayer3(0,p);
+    printf("SystemA: type: %d, ack: %d, seq: %d, checkSum: %d, pkt: %s\n",p.type,p.acknum,p.seqnum,p.checksum,p.payload);
+    tolayer1(0,p);
     savePacket(p,0);
     starttimer(0,100);
     sendStateA = (sendStateA == WAITING_FOR_0_A )? WAITNG_ACK_FOR_0_A : WAITNG_ACK_FOR_1_A;
@@ -170,9 +420,9 @@ void A_output(struct msg message)
 }
 
 /* need be completed only for extra credit */
-void B_output(struct msg message)
+void B_output(struct pkt message)
 {
-    printf("network layer is trying to send pkt in layer 2 in system B\n");
+    printf("network layer is trying to send frame in layer 2 in system B\n");
     printf("Current sendState of System B: %d\n",sendStateB);
     if(sendStateB == WAITNG_ACK_FOR_0_B || sendStateB == WAITNG_ACK_FOR_1_B)
     {
@@ -180,11 +430,13 @@ void B_output(struct msg message)
         return;
     }
 
-    struct pkt p;
-    if(piggyBagB!=EMPTY)
+    struct frame p;
+    if(piggyBagB!=EMPTY && PIGGYBAGENABLED == 1)
     {
         p.type = 2; // piggybagged data frame
         p.acknum = piggyBagB;
+        piggyBagB = EMPTY;
+        printf("System B: piggybagged data detected. Sending ack with current dataframe\n");
     }
     else
     {
@@ -204,11 +456,11 @@ void B_output(struct msg message)
     }
 
     strcpy(p.payload,message.data);
-    p.checksum = checkSum(p);
+    p.checksum = crcChecksum(p);
 
     printf("System B sending new frame for the first time\n");
-    printf("System B: type: %d, ack: %d, seq: %d, checkSum: %d, msg: %s\n",p.type,p.acknum,p.seqnum,p.checksum,p.payload);
-    tolayer3(1,p);
+    printf("System B: type: %d, ack: %d, seq: %d, checkSum: %d, pkt: %s\n",p.type,p.acknum,p.seqnum,p.checksum,p.payload);
+    tolayer1(1,p);
     savePacket(p,1);
     starttimer(1,100);
     sendStateB = (sendStateB == WAITING_FOR_0_B )? WAITNG_ACK_FOR_0_B : WAITNG_ACK_FOR_1_B;
@@ -216,23 +468,23 @@ void B_output(struct msg message)
 }
 
 /* called from layer 3, when a packet arrives for layer 4 */
-void A_input(struct pkt packet)
+void A_input(struct frame packet)
 {
     printf("Physical layer has frame for layer2 in system A\n");
     printf("Current receive State of System A: %d\n",receStateA);
-    printf("System A: type: %d, ack: %d, seq: %d, checkSum: %d, msg: %s\n",packet.type,packet.acknum,packet.seqnum,packet.checksum,packet.payload);
-    int c = checkSum(packet);
-    if(c!=packet.checksum)
+    printf("System A: type: %d, ack: %d, seq: %d, checkSum: %d, pkt: %s\n",packet.type,packet.acknum,packet.seqnum,packet.checksum,packet.payload);
+    int c = verifyCrcChecksum(packet);
+    if(c!=0)
     {
         printf("bad frame in system A hence sending nack\n"); // courrpted or wrong packet
-        struct pkt p;
+        struct frame p;
         p.type = 1; // no data.. only ack/nack
         p.acknum = (receStateA == WAITING_TO_RECEIVE_0_A)? 1 : 0;
         piggyBagA = EMPTY; // p.acknum has last acknowledgement
         p.seqnum = EMPTY;
-        strcpy(p.payload,"dummy nack packet");
-        p.checksum = checkSum(p);
-        tolayer3(0,p);
+        strcpy(p.payload,"nil");
+        p.checksum = crcChecksum(p);
+        tolayer1(0,p);
         return;
     }
 
@@ -242,14 +494,14 @@ void A_input(struct pkt packet)
         if(packet.seqnum != desiredSeqNum)
         {
             printf("invalid seq frame in system A hence sending nack\n");
-            struct pkt p;
+            struct frame p;
             p.type = 1; // no data.. only ack/nack
             p.acknum = (receStateA == WAITING_TO_RECEIVE_0_A)? 1 : 0;
             piggyBagA = EMPTY; // p.acknum has last acknowledgement
             p.seqnum = EMPTY;
-            strcpy(p.payload,"dummy nack packet");
-            p.checksum = checkSum(p);
-            tolayer3(0,p);
+            strcpy(p.payload,"nil");
+            p.checksum = crcChecksum(p);
+            tolayer1(0,p);
 
         }
         else
@@ -257,7 +509,19 @@ void A_input(struct pkt packet)
             printf("good frame hence sending to network layer in system A\n");
             piggyBagA = (receStateA == WAITING_TO_RECEIVE_0_A)? 0 : 1; // piggybagging
             receStateA = (receStateA == WAITING_TO_RECEIVE_0_A)? WAITING_TO_RECEIVE_1_A : WAITING_TO_RECEIVE_0_A;
-            tolayer5(0,packet.payload);
+            tolayer3(0,packet.payload);
+            if(PIGGYBAGENABLED == 0) // if piggybagged is disabled then sending ack
+            {
+                struct frame p;
+                p.type = 1; // no data.. only ack/nack
+                p.acknum = piggyBagA;
+                piggyBagA = EMPTY; // p.acknum has last acknowledgement
+                p.seqnum = EMPTY; // doesn't matter
+                strcpy(p.payload,"nil");
+                p.checksum = crcChecksum(p);
+                tolayer1(0,p);
+            }
+
         }
         return;
 
@@ -303,14 +567,14 @@ void A_input(struct pkt packet)
         if(packet.seqnum != desiredSeqNum)
         {
             printf("invalid seq frame in system A hence sending nack\n");
-            struct pkt p;
+            struct frame p;
             p.type = 1; // no data.. only ack/nack
             p.acknum = (receStateA == WAITING_TO_RECEIVE_0_A)? 1 : 0;
             piggyBagA = EMPTY; // p.acknum has last acknowledgement
             p.seqnum = EMPTY;
-            strcpy(p.payload,"dummy nack packet");
-            p.checksum = checkSum(p);
-            tolayer3(0,p);
+            strcpy(p.payload,"nil");
+            p.checksum = crcChecksum(p);
+            tolayer1(0,p);
 
         }
         else
@@ -318,7 +582,19 @@ void A_input(struct pkt packet)
             printf("good frame hence sending to network layer in system A\n");
             piggyBagA = (receStateA == WAITING_TO_RECEIVE_0_A)? 0 : 1; // piggybagging
             receStateA = (receStateA == WAITING_TO_RECEIVE_0_A)? WAITING_TO_RECEIVE_1_A : WAITING_TO_RECEIVE_0_A;
-            tolayer5(0,packet.payload);
+            tolayer3(0,packet.payload);
+
+            if(PIGGYBAGENABLED == 0) // if piggybagged is disabled then sending ack
+            {
+                struct frame p;
+                p.type = 1; // no data.. only ack/nack
+                p.acknum = piggyBagA;
+                piggyBagA = EMPTY; // p.acknum has last acknowledgement
+                p.seqnum = EMPTY; // doesn't matter
+                strcpy(p.payload,"nil");
+                p.checksum = crcChecksum(p);
+                tolayer1(0,p);
+            }
         }
 
 
@@ -366,18 +642,19 @@ void A_timerinterrupt(void)
     {
         printf("this case shouldn't arise\n");
     }
-    struct pkt *currentPacket_A = savedPacket_A;
+    struct frame *currentPacket_A = savedPacket_A;
 
-    struct pkt p;
-    p.type = currentPacket_A->type;
+    struct frame p;
+    p.type = 0; // no valid ack/nack is being sent
     p.seqnum = currentPacket_A->seqnum;
-    p.checksum = currentPacket_A->checksum;
-    p.acknum = currentPacket_A->acknum;
-    strcpy(p.payload,currentPacket_A->payload);
 
-    printf("System A Resending: type: %d, ack: %d, seq: %d, checkSum: %d, msg: %s\n",p.type,p.acknum,p.seqnum,p.checksum,p.payload);
+    p.acknum = EMPTY;
+    strcpy(p.payload,currentPacket_A->payload);
+    p.checksum = crcChecksum(p);
+
+    printf("System A Resending: type: %d, ack: %d, seq: %d, checkSum: %d, pkt: %s\n",p.type,p.acknum,p.seqnum,p.checksum,p.payload);
     starttimer(0,100);
-    tolayer3(0,p);
+    tolayer1(0,p);
 }
 
 /* the following routine will be called once (only) before any other */
@@ -394,23 +671,23 @@ void A_init(void)
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
 
 /* called from layer 3, when a packet arrives for layer 4 at B*/
-void B_input(struct pkt packet)
+void B_input(struct frame packet)
 {
     printf("Physical layer has frame for layer2 in system B\n");
     printf("Current receive State of System B: %d\n",receStateB);
-    printf("System B: type: %d, ack: %d, seq: %d, checkSum: %d, msg: %s\n",packet.type,packet.acknum,packet.seqnum,packet.checksum,packet.payload);
-    int c = checkSum(packet);
-    if(c!=packet.checksum)
+    printf("System B: type: %d, ack: %d, seq: %d, checkSum: %d, pkt: %s\n",packet.type,packet.acknum,packet.seqnum,packet.checksum,packet.payload);
+    int c = verifyCrcChecksum(packet);
+    if(c!=0)
     {
         printf("bad frame in system B hence sending nack\n"); // courrpted or wrong packet
-        struct pkt p;
+        struct frame p;
         p.type = 1; // no data.. only ack/nack
         p.acknum = (receStateB == WAITING_TO_RECEIVE_0_B)? 1 : 0;
         piggyBagB = EMPTY; // p.acknum has last acknowledgement
         p.seqnum = EMPTY;
-        strcpy(p.payload,"dummy nack packet");
-        p.checksum = checkSum(p);
-        tolayer3(1,p);
+        strcpy(p.payload,"nil");
+        p.checksum = crcChecksum(p);
+        tolayer1(1,p);
         return;
     }
 
@@ -420,14 +697,16 @@ void B_input(struct pkt packet)
         if(packet.seqnum != desiredSeqNum)
         {
             printf("invalid seq frame in system B hence sending nack\n");
-            struct pkt p;
+            struct frame p;
             p.type = 1; // no data.. only ack/nack
             p.acknum = (receStateB == WAITING_TO_RECEIVE_0_B)? 1 : 0;
             piggyBagB = EMPTY; // p.acknum has last acknowledgement
             p.seqnum = EMPTY;
-            strcpy(p.payload,"dummy nack packet");
-            p.checksum = checkSum(p);
-            tolayer3(1,p);
+            strcpy(p.payload,"nil");
+            p.checksum = crcChecksum(p);
+            tolayer1(1,p);
+
+
 
         }
         else
@@ -435,7 +714,19 @@ void B_input(struct pkt packet)
             printf("good frame hence sending to network layer in system B\n");
             piggyBagB = (receStateB == WAITING_TO_RECEIVE_0_B)? 0 : 1; // piggybagging
             receStateB = (receStateB == WAITING_TO_RECEIVE_0_B)? WAITING_TO_RECEIVE_1_B : WAITING_TO_RECEIVE_0_B;
-            tolayer5(1,packet.payload);
+            tolayer3(1,packet.payload);
+
+            if(PIGGYBAGENABLED == 0) // if piggybagged is disabled then sending ack
+            {
+                struct frame p;
+                p.type = 1; // no data.. only ack/nack
+                p.acknum = piggyBagB;
+                piggyBagB = EMPTY; // p.acknum has last acknowledgement
+                p.seqnum = EMPTY; // doesn't matter
+                strcpy(p.payload,"nil");
+                p.checksum = crcChecksum(p);
+                tolayer1(1,p);
+            }
         }
         return;
 
@@ -481,14 +772,14 @@ void B_input(struct pkt packet)
         if(packet.seqnum != desiredSeqNum)
         {
             printf("invalid seq frame in system B hence sending nack\n");
-            struct pkt p;
+            struct frame p;
             p.type = 1; // no data.. only ack/nack
             p.acknum = (receStateB == WAITING_TO_RECEIVE_0_B)? 1 : 0;
             piggyBagB = EMPTY; // p.acknum has last acknowledgement
             p.seqnum = EMPTY;
-            strcpy(p.payload,"dummy nack packet");
-            p.checksum = checkSum(p);
-            tolayer3(1,p);
+            strcpy(p.payload,"nil");
+            p.checksum = crcChecksum(p);
+            tolayer1(1,p);
 
         }
         else
@@ -496,7 +787,19 @@ void B_input(struct pkt packet)
             printf("good frame hence sending to network layer in system B\n");
             piggyBagB = (receStateB == WAITING_TO_RECEIVE_0_B)? 0 : 1; // piggybagging
             receStateB = (receStateB == WAITING_TO_RECEIVE_0_B)? WAITING_TO_RECEIVE_1_B : WAITING_TO_RECEIVE_0_B;
-            tolayer5(1,packet.payload);
+            tolayer3(1,packet.payload);
+
+            if(PIGGYBAGENABLED == 0) // if piggybagged is disabled then sending ack
+            {
+                struct frame p;
+                p.type = 1; // no data.. only ack/nack
+                p.acknum = piggyBagB;
+                piggyBagB = EMPTY; // p.acknum has last acknowledgement
+                p.seqnum = EMPTY; // doesn't matter
+                strcpy(p.payload,"nil");
+                p.checksum = crcChecksum(p);
+                tolayer1(1,p);
+            }
         }
 
         if(sendStateB == WAITING_FOR_0_B || sendStateB == WAITING_FOR_1_B)
@@ -542,18 +845,19 @@ void B_timerinterrupt(void)
     {
         printf("this case shouldn't arise\n");
     }
-    struct pkt *currentPacket_B = savedPacket_B;
+    struct frame *currentPacket_B = savedPacket_B;
 
-    struct pkt p;
-    p.type = currentPacket_B->type;
+    struct frame p;
+    p.type = 0; // no valid ack/nack is being sent
     p.seqnum = currentPacket_B->seqnum;
-    p.checksum = currentPacket_B->checksum;
-    p.acknum = currentPacket_B->acknum;
-    strcpy(p.payload,currentPacket_B->payload);
 
-    printf("System B Resending: type: %d, ack: %d, seq: %d, checkSum: %d, msg: %s\n",p.type,p.acknum,p.seqnum,p.checksum,p.payload);
+    p.acknum = EMPTY;
+    strcpy(p.payload,currentPacket_B->payload);
+    p.checksum = crcChecksum(p);
+
+    printf("System B Resending: type: %d, ack: %d, seq: %d, checkSum: %d, pkt: %s\n",p.type,p.acknum,p.seqnum,p.checksum,p.payload);
     starttimer(1,100);
-    tolayer3(1,p);
+    tolayer1(1,p);
 }
 
 /* the following rouytine will be called once (only) before any other */
@@ -587,7 +891,7 @@ struct event
     float evtime;       /* event time */
     int evtype;         /* event type code */
     int eventity;       /* entity where event occurs */
-    struct pkt *pktptr; /* ptr to packet (if any) assoc w/ this event */
+    struct frame *frameptr; /* ptr to packet (if any) assoc w/ this event */
     struct event *prev;
     struct event *next;
 };
@@ -595,8 +899,8 @@ struct event *evlist = NULL; /* the event list */
 
 /* possible events: */
 #define TIMER_INTERRUPT 0
-#define FROM_LAYER5 1
-#define FROM_LAYER3 2
+#define FROM_layer3 1
+#define FROM_layer1 2
 
 #define OFF 0
 #define ON 1
@@ -605,12 +909,12 @@ struct event *evlist = NULL; /* the event list */
 
 int TRACE = 1;     /* for my debugging */
 int nsim = 0;      /* number of messages from 5 to 4 so far */
-int nsimmax = 0;   /* number of msgs to generate, then stop */
+int nsimmax = 0;   /* number of pkts to generate, then stop */
 float time = 0.000;
 float lossprob;    /* probability that a packet is dropped  */
 float corruptprob; /* probability that one bit is packet is flipped */
 float lambda;      /* arrival rate of messages from layer 5 */
-int ntolayer3;     /* number sent into layer 3 */
+int ntolayer1;     /* number sent into layer 3 */
 int nlost;         /* number lost in media */
 int ncorrupt;      /* number corrupted by media*/
 
@@ -620,9 +924,12 @@ void insertevent(struct event *p);
 
 int main()
 {
+
     struct event *eventptr;
-    struct msg msg2give;
     struct pkt pkt2give;
+    struct frame frame2give;
+    //crcChecksum(frame2give);
+    verifyCrcChecksum(frame2give);
 
     int i, j;
     char c;
@@ -646,50 +953,50 @@ int main()
             if (eventptr->evtype == 0)
                 printf(", timerinterrupt  ");
             else if (eventptr->evtype == 1)
-                printf(", fromlayer5 ");
-            else
                 printf(", fromlayer3 ");
+            else
+                printf(", fromlayer1 ");
             printf(" entity: %d\n", eventptr->eventity);
         }
         time = eventptr->evtime; /* update time to next event time */
-        if (eventptr->evtype == FROM_LAYER5)
+        if (eventptr->evtype == FROM_layer3)
         {
             if (nsim < nsimmax)
             {
                 if (nsim + 1 < nsimmax)
                     generate_next_arrival(); /* set up future arrival */
-                /* fill in msg to give with string of same letter */
+                /* fill in pkt to give with string of same letter */
                 j = nsim % 26;
-                for (i = 0; i < 20; i++)
-                    msg2give.data[i] = 97 + j;
-                msg2give.data[19] = 0;
+                for (i = 0; i < 4; i++)
+                    pkt2give.data[i] = 97 + j;
+                pkt2give.data[3] = 0;
                 if (TRACE > 2)
                 {
                     printf("          MAINLOOP: data given to student: ");
-                    for (i = 0; i < 20; i++)
-                        printf("%c", msg2give.data[i]);
+                    for (i = 0; i < 4; i++)
+                        printf("%c", pkt2give.data[i]);
                     printf("\n");
                 }
                 nsim++;
                 if (eventptr->eventity == A)
-                    A_output(msg2give);
+                    A_output(pkt2give);
                 else
-                    B_output(msg2give);
+                    B_output(pkt2give);
             }
         }
-        else if (eventptr->evtype == FROM_LAYER3)
+        else if (eventptr->evtype == FROM_layer1)
         {
-            pkt2give.type = eventptr->pktptr->type;
-            pkt2give.seqnum = eventptr->pktptr->seqnum;
-            pkt2give.acknum = eventptr->pktptr->acknum;
-            pkt2give.checksum = eventptr->pktptr->checksum;
-            for (i = 0; i < 20; i++)
-                pkt2give.payload[i] = eventptr->pktptr->payload[i];
+            frame2give.type = eventptr->frameptr->type;
+            frame2give.seqnum = eventptr->frameptr->seqnum;
+            frame2give.acknum = eventptr->frameptr->acknum;
+            frame2give.checksum = eventptr->frameptr->checksum;
+            for (i = 0; i < 4; i++)
+                frame2give.payload[i] = eventptr->frameptr->payload[i];
             if (eventptr->eventity == A) /* deliver packet by calling */
-                A_input(pkt2give); /* appropriate entity */
+                A_input(frame2give); /* appropriate entity */
             else
-                B_input(pkt2give);
-            free(eventptr->pktptr); /* free the memory for packet */
+                B_input(frame2give);
+            free(eventptr->frameptr); /* free the memory for packet */
         }
         else if (eventptr->evtype == TIMER_INTERRUPT)
         {
@@ -707,7 +1014,7 @@ int main()
 
     terminate:
     printf(
-            " Simulator terminated at time %f\n after sending %d msgs from layer5\n",
+            " Simulator terminated at time %f\n after sending %d pkts from layer3\n",
             time, nsim);
 }
 
@@ -724,15 +1031,17 @@ void init() /* initialize the simulator */
 //    scanf("%f",&lossprob);
 //    printf("Enter packet corruption probability [0.0 for no corruption]:");
 //    scanf("%f",&corruptprob);
-//    printf("Enter average time between messages from sender's layer5 [ > 0.0]:");
+//    printf("Enter average time between messages from sender's layer3 [ > 0.0]:");
 //    scanf("%f",&lambda);
 //    printf("Enter TRACE:");
 //    scanf("%d",&TRACE);
-    nsimmax = 5;
+    nsimmax = 2;
     lossprob = 0.0;
-    corruptprob = 0.0;
-    lambda = 1000;
+    corruptprob = 0.5;
+    lambda = 500;
     TRACE = 2;
+    PIGGYBAGENABLED =0;
+    CRCSTEP = 1;
 
     srand(9999); /* init random number generator */
     sum = 0.0;   /* test random number generator for students */
@@ -747,7 +1056,7 @@ void init() /* initialize the simulator */
         exit(1);
     }
 
-    ntolayer3 = 0;
+    ntolayer1 = 0;
     nlost = 0;
     ncorrupt = 0;
 
@@ -786,7 +1095,7 @@ void generate_next_arrival(void)
     /* having mean of lambda        */
     evptr = (struct event *)malloc(sizeof(struct event));
     evptr->evtime = time + x;
-    evptr->evtype = FROM_LAYER5;
+    evptr->evtype = FROM_layer3;
     if (BIDIRECTIONAL && (jimsrand() > 0.5))
         evptr->eventity = B;
     else
@@ -908,48 +1217,48 @@ void starttimer(int AorB /* A or B is trying to start timer */, float increment)
     insertevent(evptr);
 }
 
-/************************** TOLAYER3 ***************/
-void tolayer3(int AorB, struct pkt packet)
+/************************** TOlayer1 ***************/
+void tolayer1(int AorB, struct frame packet)
 {
-    struct pkt *mypktptr;
+    struct frame *myframeptr;
     struct event *evptr, *q;
     float lastime, x;
     int i;
 
-    ntolayer3++;
+    ntolayer1++;
 
     /* simulate losses: */
     if (jimsrand() < lossprob)
     {
         nlost++;
         if (TRACE > 0)
-            printf("          TOLAYER3: packet being lost\n");
+            printf("          TOlayer1: packet being lost\n");
         return;
     }
 
     /* make a copy of the packet student just gave me since he/she may decide */
     /* to do something with the packet after we return back to him/her */
-    mypktptr = (struct pkt *)malloc(sizeof(struct pkt));
-    mypktptr->type = packet.type;
-    mypktptr->seqnum = packet.seqnum;
-    mypktptr->acknum = packet.acknum;
-    mypktptr->checksum = packet.checksum;
-    for (i = 0; i < 20; i++)
-        mypktptr->payload[i] = packet.payload[i];
+    myframeptr = (struct frame *)malloc(sizeof(struct frame));
+    myframeptr->type = packet.type;
+    myframeptr->seqnum = packet.seqnum;
+    myframeptr->acknum = packet.acknum;
+    myframeptr->checksum = packet.checksum;
+    for (i = 0; i < 4; i++)
+        myframeptr->payload[i] = packet.payload[i];
     if (TRACE > 2)
     {
-        printf("          TOLAYER3: seq: %d, ack %d, check: %d ", mypktptr->seqnum,
-               mypktptr->acknum, mypktptr->checksum);
-        for (i = 0; i < 20; i++)
-            printf("%c", mypktptr->payload[i]);
+        printf("          TOlayer1: seq: %d, ack %d, check: %d ", myframeptr->seqnum,
+               myframeptr->acknum, myframeptr->checksum);
+        for (i = 0; i < 4; i++)
+            printf("%c", myframeptr->payload[i]);
         printf("\n");
     }
 
     /* create future event for arrival of packet at the other side */
     evptr = (struct event *)malloc(sizeof(struct event));
-    evptr->evtype = FROM_LAYER3;      /* packet will pop out from layer3 */
+    evptr->evtype = FROM_layer1;      /* packet will pop out from layer1 */
     evptr->eventity = (AorB + 1) % 2; /* event occurs at other entity */
-    evptr->pktptr = mypktptr;         /* save ptr to my copy of packet */
+    evptr->frameptr = myframeptr;         /* save ptr to my copy of packet */
     /* finally, compute the arrival time of packet at the other end.
        medium can not reorder, so make sure packet arrives between 1 and 10
        time units after the latest arrival time of packets
@@ -957,7 +1266,7 @@ void tolayer3(int AorB, struct pkt packet)
     lastime = time;
     /* for (q=evlist; q!=NULL && q->next!=NULL; q = q->next) */
     for (q = evlist; q != NULL; q = q->next)
-        if ((q->evtype == FROM_LAYER3 && q->eventity == evptr->eventity))
+        if ((q->evtype == FROM_layer1 && q->eventity == evptr->eventity))
             lastime = q->evtime;
     evptr->evtime = lastime + 1 + 9 * jimsrand();
 
@@ -966,27 +1275,27 @@ void tolayer3(int AorB, struct pkt packet)
     {
         ncorrupt++;
         if ((x = jimsrand()) < .75)
-            mypktptr->payload[0] = 'Z'; /* corrupt payload */
+            myframeptr->payload[0] = 'Z'; /* corrupt payload */
         else if (x < .875)
-            mypktptr->seqnum = 999999;
+            myframeptr->seqnum = 999999;
         else
-            mypktptr->acknum = 999999;
+            myframeptr->acknum = 999999;
         if (TRACE > 0)
-            printf("          TOLAYER3: packet being corrupted\n");
+            printf("          TOlayer1: packet being corrupted\n");
     }
 
     if (TRACE > 2)
-        printf("          TOLAYER3: scheduling arrival on other side\n");
+        printf("          TOlayer1: scheduling arrival on other side\n");
     insertevent(evptr);
 }
 
-void tolayer5(int AorB, char datasent[20])
+void tolayer3(int AorB, char datasent[4])
 {
     int i;
     if (TRACE > 2)
     {
-        printf("          TOLAYER5: data received: ");
-        for (i = 0; i < 20; i++)
+        printf("          TOlayer3: data received: ");
+        for (i = 0; i < 4; i++)
             printf("%c", datasent[i]);
         printf("\n");
     }
