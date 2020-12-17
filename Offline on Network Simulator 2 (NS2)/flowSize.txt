@@ -1,0 +1,263 @@
+
+
+Parsed file name: flowSizeTrace1.tr
+Sent Packets: 281
+Dropped Packets: 37
+Received Packets: 241
+---------------------------
+Throughtput: 38276.08907671677 bits/sec
+Average Delay: 0.029523802112033058 seconds
+Delivery ratio: 0.8576512455516014
+Drop ratio: 0.13167259786476868
+
+
+
+
+Parsed file name: flowSizeTrace1.tr
+Sent Packets: 1
+Dropped Packets: 0
+Received Packets: 0
+---------------------------
+Throughtput: 0.0 bits/sec
+
+
+Parsed file name: flowSizeTrace1.tr
+Sent Packets: 267
+Dropped Packets: 44
+Received Packets: 218
+---------------------------
+Throughtput: 33859.61726017253 bits/sec
+Average Delay: 0.1371885667706423 seconds
+Delivery ratio: 0.8164794007490637
+Drop ratio: 0.1647940074906367
+
+
+
+
+Parsed file name: flowSizeTrace2.tr
+Sent Packets: 370
+Dropped Packets: 74
+Received Packets: 284
+---------------------------
+Throughtput: 44668.06760204247 bits/sec
+Average Delay: 0.10296794932394365 seconds
+Delivery ratio: 0.7675675675675676
+Drop ratio: 0.2
+
+
+
+
+Parsed file name: flowSizeTrace2.tr
+Sent Packets: 557
+Dropped Packets: 79
+Received Packets: 472
+---------------------------
+Throughtput: 75101.25651771977 bits/sec
+Average Delay: 0.12272035672245762 seconds
+Delivery ratio: 0.8473967684021544
+Drop ratio: 0.14183123877917414
+
+
+
+
+Parsed file name: flowSizeTrace3.tr
+Sent Packets: 613
+Dropped Packets: 115
+Received Packets: 474
+---------------------------
+Throughtput: 75101.25651771977 bits/sec
+Average Delay: 0.07368731210337554 seconds
+Delivery ratio: 0.7732463295269169
+Drop ratio: 0.18760195758564438
+
+
+
+
+Parsed file name: flowSizeTrace3.tr
+Sent Packets: 462
+Dropped Packets: 124
+Received Packets: 320
+---------------------------
+Throughtput: 49740.26575465535 bits/sec
+Average Delay: 0.10758801086562533 seconds
+Delivery ratio: 0.6926406926406926
+Drop ratio: 0.2683982683982684
+
+
+
+
+Parsed file name: flowSizeTrace3.tr
+Sent Packets: 591
+Dropped Packets: 124
+Received Packets: 462
+---------------------------
+Throughtput: 73465.06356526399 bits/sec
+Average Delay: 0.0490737456666668 seconds
+Delivery ratio: 0.7817258883248731
+Drop ratio: 0.2098138747884941
+
+
+
+
+Parsed file name: flowSizeTrace4.tr
+Sent Packets: 523
+Dropped Packets: 179
+Received Packets: 320
+---------------------------
+Throughtput: 48844.809767379054 bits/sec
+Average Delay: 0.17756900863124986 seconds
+Delivery ratio: 0.6118546845124283
+Drop ratio: 0.3422562141491396
+
+
+
+
+Parsed file name: flowSizeTrace4.tr
+Sent Packets: 272
+Dropped Packets: 169
+Received Packets: 75
+---------------------------
+Throughtput: 10455.076338168092 bits/sec
+Average Delay: 0.1761963065866668 seconds
+Delivery ratio: 0.2757352941176471
+Drop ratio: 0.6213235294117647
+
+
+
+
+Parsed file name: flowSizeTrace4.tr
+Sent Packets: 12
+Dropped Packets: 0
+Received Packets: 1
+---------------------------
+Throughtput: 0.0 bits/sec
+Average Delay: 0.17559131799999994 seconds
+Delivery ratio: 0.08333333333333333
+Drop ratio: 0.0
+
+
+
+
+Parsed file name: flowSizeTrace4.tr
+Sent Packets: 419
+Dropped Packets: 173
+Received Packets: 216
+---------------------------
+Throughtput: 32672.113556775286 bits/sec
+Average Delay: 0.12739673175925922 seconds
+Delivery ratio: 0.5155131264916468
+Drop ratio: 0.4128878281622912
+
+
+
+
+Parsed file name: flowSizeTrace5.tr
+Sent Packets: 896
+Dropped Packets: 208
+Received Packets: 659
+---------------------------
+Throughtput: 103407.23940719379 bits/sec
+Average Delay: 0.13605319758270082 seconds
+Delivery ratio: 0.7354910714285714
+Drop ratio: 0.23214285714285715
+
+
+
+
+Parsed file name: flowSizeTrace5.tr
+Sent Packets: 757
+Dropped Packets: 210
+Received Packets: 530
+---------------------------
+Throughtput: 84294.05297648023 bits/sec
+Average Delay: 0.12499369439811339 seconds
+Delivery ratio: 0.7001321003963011
+Drop ratio: 0.2774108322324967
+
+
+
+
+Parsed file name: flowSizeTrace5.tr
+Sent Packets: 590
+Dropped Packets: 223
+Received Packets: 335
+---------------------------
+Throughtput: 52438.742258624334 bits/sec
+Average Delay: 0.060118024155223826 seconds
+Delivery ratio: 0.5677966101694916
+Drop ratio: 0.37796610169491524
+
+
+
+
+Parsed file name: flowSizeTrace5.tr
+Sent Packets: 877
+Dropped Packets: 199
+Received Packets: 644
+---------------------------
+Throughtput: 100630.10975486788 bits/sec
+Average Delay: 0.14206187959161495 seconds
+Delivery ratio: 0.734321550741163
+Drop ratio: 0.22690992018244013
+
+
+
+
+Parsed file name: flowSizeTrace4.tr
+Sent Packets: 12
+Dropped Packets: 0
+Received Packets: 0
+---------------------------
+Throughtput: 0.0 bits/sec
+
+
+Parsed file name: flowSizeTrace4.tr
+Sent Packets: 812
+Dropped Packets: 159
+Received Packets: 634
+---------------------------
+Throughtput: 100630.10975486788 bits/sec
+Average Delay: 0.04876267797949538 seconds
+Delivery ratio: 0.7807881773399015
+Drop ratio: 0.1958128078817734
+
+
+
+
+Parsed file name: flowSizeTrace4.tr
+Sent Packets: 626
+Dropped Packets: 163
+Received Packets: 440
+---------------------------
+Throughtput: 68611.4384692281 bits/sec
+Average Delay: 0.056010477365909285 seconds
+Delivery ratio: 0.7028753993610224
+Drop ratio: 0.26038338658146964
+
+
+
+
+Parsed file name: flowSizeTrace4.tr
+Sent Packets: 402
+Dropped Packets: 185
+Received Packets: 189
+---------------------------
+Throughtput: 28914.82049774613 bits/sec
+Average Delay: 0.05899893813227504 seconds
+Delivery ratio: 0.4701492537313433
+Drop ratio: 0.4601990049751244
+
+
+
+
+Parsed file name: flowSizeTrace4.tr
+Sent Packets: 445
+Dropped Packets: 191
+Received Packets: 221
+---------------------------
+Throughtput: 32998.834692343036 bits/sec
+Average Delay: 0.14497202706334836 seconds
+Delivery ratio: 0.4966292134831461
+Drop ratio: 0.42921348314606744
+
+

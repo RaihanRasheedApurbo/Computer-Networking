@@ -1,0 +1,256 @@
+
+
+Parsed file name: nodeSizeTrace1.tr
+Sent Packets: 521
+Dropped Packets: 81
+Received Packets: 428
+---------------------------
+Throughtput: 67625.35383084847 bits/sec
+Average Delay: 0.019378037602803735 seconds
+Delivery ratio: 0.8214971209213052
+Drop ratio: 0.15547024952015356
+
+
+
+
+Parsed file name: nodeSizeTrace1.tr
+Sent Packets: 558
+Dropped Packets: 60
+Received Packets: 490
+---------------------------
+Throughtput: 78079.51480953037 bits/sec
+Average Delay: 0.05984836852653068 seconds
+Delivery ratio: 0.8781362007168458
+Drop ratio: 0.10752688172043011
+
+
+
+
+Parsed file name: nodeSizeTrace2.tr
+Sent Packets: 338
+Dropped Packets: 79
+Received Packets: 247
+---------------------------
+Throughtput: 38614.15367795613 bits/sec
+Average Delay: 0.19590556867206463 seconds
+Delivery ratio: 0.7307692307692307
+Drop ratio: 0.23372781065088757
+
+
+
+
+Parsed file name: nodeSizeTrace2.tr
+Sent Packets: 5
+Dropped Packets: 0
+Received Packets: 0
+---------------------------
+Throughtput: 0.0 bits/sec
+
+
+Parsed file name: nodeSizeTrace2.tr
+Sent Packets: 361
+Dropped Packets: 71
+Received Packets: 280
+---------------------------
+Throughtput: 44504.4483067969 bits/sec
+Average Delay: 0.10161919527142868 seconds
+Delivery ratio: 0.775623268698061
+Drop ratio: 0.19667590027700832
+
+
+
+
+Parsed file name: nodeSizeTrace3.tr
+Sent Packets: 100
+Dropped Packets: 87
+Received Packets: 1
+---------------------------
+Throughtput: 0.0 bits/sec
+Average Delay: 0.036189883000000034 seconds
+Delivery ratio: 0.01
+Drop ratio: 0.87
+
+
+
+
+Parsed file name: nodeSizeTrace3.tr
+Sent Packets: 531
+Dropped Packets: 102
+Received Packets: 429
+---------------------------
+Throughtput: 68448.07790144422 bits/sec
+Average Delay: 0.21576820579020994 seconds
+Delivery ratio: 0.807909604519774
+Drop ratio: 0.192090395480226
+
+
+
+
+Parsed file name: nodeSizeTrace3.tr
+Sent Packets: 240
+Dropped Packets: 83
+Received Packets: 151
+---------------------------
+Throughtput: 23850.64289644596 bits/sec
+Average Delay: 0.16194373736423856 seconds
+Delivery ratio: 0.6291666666666667
+Drop ratio: 0.3458333333333333
+
+
+
+
+Parsed file name: nodeSizeTrace4.tr
+Sent Packets: 178
+Dropped Packets: 108
+Received Packets: 59
+---------------------------
+Throughtput: 8680.321427428375 bits/sec
+Average Delay: 0.1942118296949153 seconds
+Delivery ratio: 0.33146067415730335
+Drop ratio: 0.6067415730337079
+
+
+
+
+Parsed file name: nodeSizeTrace4.tr
+Sent Packets: 270
+Dropped Packets: 90
+Received Packets: 169
+---------------------------
+Throughtput: 26696.082880581605 bits/sec
+Average Delay: 0.12644402863313609 seconds
+Delivery ratio: 0.6259259259259259
+Drop ratio: 0.3333333333333333
+
+
+
+
+Parsed file name: nodeSizeTrace4.tr
+Sent Packets: 155
+Dropped Packets: 93
+Received Packets: 47
+---------------------------
+Throughtput: 7206.304581261293 bits/sec
+Average Delay: 0.5212374372127664 seconds
+Delivery ratio: 0.3032258064516129
+Drop ratio: 0.6
+
+
+
+
+Parsed file name: nodeSizeTrace4.tr
+Sent Packets: 7
+Dropped Packets: 0
+Received Packets: 0
+---------------------------
+Throughtput: 0.0 bits/sec
+
+
+Parsed file name: nodeSizeTrace4.tr
+Sent Packets: 393
+Dropped Packets: 76
+Received Packets: 306
+---------------------------
+Throughtput: 48478.776273939606 bits/sec
+Average Delay: 0.05798087622875814 seconds
+Delivery ratio: 0.7786259541984732
+Drop ratio: 0.19338422391857507
+
+
+
+
+Parsed file name: nodeSizeTrace5.tr
+Sent Packets: 173
+Dropped Packets: 95
+Received Packets: 72
+---------------------------
+Throughtput: 10623.75399485144 bits/sec
+Average Delay: 0.33355110269444477 seconds
+Delivery ratio: 0.4161849710982659
+Drop ratio: 0.5491329479768786
+
+
+
+
+Parsed file name: nodeSizeTrace5.tr
+Sent Packets: 2
+Dropped Packets: 0
+Received Packets: 0
+---------------------------
+Throughtput: 0.0 bits/sec
+
+
+Parsed file name: nodeSizeTrace5.tr
+Sent Packets: 2
+Dropped Packets: 0
+Received Packets: 0
+---------------------------
+Throughtput: 0.0 bits/sec
+
+
+Parsed file name: nodeSizeTrace5.tr
+Sent Packets: 114
+Dropped Packets: 93
+Received Packets: 13
+---------------------------
+Throughtput: 1307.538953212485 bits/sec
+Average Delay: 0.03610047423076929 seconds
+Delivery ratio: 0.11403508771929824
+Drop ratio: 0.8157894736842105
+
+
+
+
+Parsed file name: nodeSizeTrace5.tr
+Sent Packets: 105
+Dropped Packets: 93
+Received Packets: 2
+---------------------------
+Throughtput: 163.44236915156063 bits/sec
+Average Delay: 0.051401407499999996 seconds
+Delivery ratio: 0.01904761904761905
+Drop ratio: 0.8857142857142857
+
+
+
+
+Parsed file name: nodeSizeTrace5.tr
+Sent Packets: 116
+Dropped Packets: 96
+Received Packets: 13
+---------------------------
+Throughtput: 1797.8660606671667 bits/sec
+Average Delay: 0.009618554923077154 seconds
+Delivery ratio: 0.11206896551724138
+Drop ratio: 0.8275862068965517
+
+
+
+
+Parsed file name: nodeSizeTrace5.tr
+Sent Packets: 2
+Dropped Packets: 0
+Received Packets: 0
+---------------------------
+Throughtput: 0.0 bits/sec
+
+
+Parsed file name: nodeSizeTrace5.tr
+Sent Packets: 2
+Dropped Packets: 0
+Received Packets: 0
+---------------------------
+Throughtput: 0.0 bits/sec
+
+
+Parsed file name: nodeSizeTrace5.tr
+Sent Packets: 178
+Dropped Packets: 46
+Received Packets: 92
+---------------------------
+Throughtput: 22431.32017718066 bits/sec
+Average Delay: 0.2953936498913043 seconds
+Delivery ratio: 0.5168539325842697
+Drop ratio: 0.25842696629213485
+
+

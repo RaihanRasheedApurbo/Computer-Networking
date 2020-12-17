@@ -1,0 +1,151 @@
+
+
+Parsed file name: areaSizeTrace1.tr
+Sent Packets: 229
+Dropped Packets: 99
+Received Packets: 124
+---------------------------
+Throughtput: 19470.696134223643 bits/sec
+Average Delay: 0.023356980725806813 seconds
+Delivery ratio: 0.5414847161572053
+Drop ratio: 0.43231441048034935
+
+
+
+
+Parsed file name: areaSizeTrace2.tr
+Sent Packets: 309
+Dropped Packets: 72
+Received Packets: 226
+---------------------------
+Throughtput: 35014.52918255344 bits/sec
+Average Delay: 0.08694203561946895 seconds
+Delivery ratio: 0.7313915857605178
+Drop ratio: 0.23300970873786409
+
+
+
+
+Parsed file name: areaSizeTrace3.tr
+Sent Packets: 400
+Dropped Packets: 91
+Received Packets: 302
+---------------------------
+Throughtput: 48104.07280219959 bits/sec
+Average Delay: 0.04488842215231784 seconds
+Delivery ratio: 0.755
+Drop ratio: 0.2275
+
+
+
+
+Parsed file name: areaSizeTrace3.tr
+Sent Packets: 5
+Dropped Packets: 0
+Received Packets: 1
+---------------------------
+Throughtput: 0.0 bits/sec
+Average Delay: 0.09745448999999984 seconds
+Delivery ratio: 0.2
+Drop ratio: 0.0
+
+
+
+
+Parsed file name: areaSizeTrace3.tr
+Sent Packets: 5
+Dropped Packets: 0
+Received Packets: 0
+---------------------------
+Throughtput: 0.0 bits/sec
+
+
+Parsed file name: areaSizeTrace3.tr
+Sent Packets: 669
+Dropped Packets: 87
+Received Packets: 576
+---------------------------
+Throughtput: 91463.18604227745 bits/sec
+Average Delay: 0.09469512502777774 seconds
+Delivery ratio: 0.8609865470852018
+Drop ratio: 0.13004484304932734
+
+
+
+
+Parsed file name: areaSizeTrace3.tr
+Sent Packets: 669
+Dropped Packets: 87
+Received Packets: 576
+---------------------------
+Throughtput: 91463.18604227745 bits/sec
+Average Delay: 0.09469512502777774 seconds
+Delivery ratio: 0.8609865470852018
+Drop ratio: 0.13004484304932734
+
+
+
+
+Parsed file name: areaSizeTrace4.tr
+Sent Packets: 573
+Dropped Packets: 114
+Received Packets: 441
+---------------------------
+Throughtput: 69701.81977461572 bits/sec
+Average Delay: 0.42515871122448956 seconds
+Delivery ratio: 0.7696335078534031
+Drop ratio: 0.19895287958115182
+
+
+
+
+Parsed file name: areaSizeTrace4.tr
+Sent Packets: 679
+Dropped Packets: 125
+Received Packets: 543
+---------------------------
+Throughtput: 85900.13000392783 bits/sec
+Average Delay: 0.2521672476151011 seconds
+Delivery ratio: 0.7997054491899853
+Drop ratio: 0.18409425625920472
+
+
+
+
+Parsed file name: areaSizeTrace5.tr
+Sent Packets: 985
+Dropped Packets: 170
+Received Packets: 813
+---------------------------
+Throughtput: 128277.52747253222 bits/sec
+Average Delay: 0.24274769627429282 seconds
+Delivery ratio: 0.8253807106598985
+Drop ratio: 0.17258883248730963
+
+
+
+
+Parsed file name: areaSizeTrace5.tr
+Sent Packets: 896
+Dropped Packets: 201
+Received Packets: 694
+---------------------------
+Throughtput: 109788.54710978204 bits/sec
+Average Delay: 0.5884553715446685 seconds
+Delivery ratio: 0.7745535714285714
+Drop ratio: 0.22433035714285715
+
+
+
+
+Parsed file name: areaSizeTrace5.tr
+Sent Packets: 712
+Dropped Packets: 99
+Received Packets: 595
+---------------------------
+Throughtput: 93917.4754709611 bits/sec
+Average Delay: 0.29232793124537787 seconds
+Delivery ratio: 0.8356741573033708
+Drop ratio: 0.13904494382022473
+
+
